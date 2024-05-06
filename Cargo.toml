@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "messages",
+    "rmemstored",
+]
+
+[workspace.dependencies]
+# Local workspace packages
+messages                        = { path = "messages" }
+
+bytes                           = { version = "1.6" }
+criterion                       = { version = "0.5", features = ["html_reports"] }
+clap                            = { version = "4", features = ["derive", "env"] }
+env_logger                      = { version = "0.11" }
+log                             = { version = "0.4" }
+mio                             = { version = "0.8" }
+moka                            = { version = "0.12" }
+prost                           = { version = "0.12" }
+prost-build                     = { version = "0.12" }
+rand                            = { version = "0.8" }
+slab                            = { version = "0.4" }
+test-log                        = { version = "0.2" }

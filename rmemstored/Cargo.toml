@@ -1,0 +1,15 @@
+[package]
+name = "rmemstore"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+messages                        = { workspace = true }
+
+clap                            = { workspace = true }
+env_logger                      = { workspace = true }
+log                             = { workspace = true }
+mio                             = { workspace = true, features = ["os-poll", "net"] }
+moka                            = { workspace = true, features = ["sync"] }
+rand                            = { workspace = true }
+slab                            = { workspace = true }

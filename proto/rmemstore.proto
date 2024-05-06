@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package rmemstore;
+
+// An action to be taken
+message Action {
+    uint64 id = 1;
+    oneof command {
+        BlobStore blob_store = 2;
+        BlobRead blob_read = 3;
+    }
+}
+
+message BlobStore {
+    bytes key = 1;
+    bytes value = 2;
+}
+
+message BlobRead {
+    bytes key = 1;
+}
