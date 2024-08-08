@@ -10,7 +10,9 @@ use protosocket::{MessageReactor, ReactorStatus};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let threads = 3;
+    let threads = 2;
+    let client_tasks = 4;
+
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .thread_name_fn(|| {
             static I: AtomicUsize = AtomicUsize::new(0);
@@ -21,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .enable_all()
         .build()?;
 
-    runtime.block_on(run_main(2*threads))
+    runtime.block_on(run_main(client_tasks))
 }
 
 async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
@@ -31,7 +33,7 @@ async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
     registry.set_max_read_buffer_length(16 * 1024);
 
     let response_count = Arc::new(AtomicUsize::new(0));
-    let latency = Arc::new(histogram::AtomicHistogram::new(7, 52).expect("histogram works"));
+    let latency = Arc::new(histogram::AtomicHistogram::new(7, 32).expect("histogram works"));
 
     for _i in 0..uploaders {
         let concurrent_count = Arc::new(Semaphore::new(128));
@@ -126,7 +128,8 @@ impl MessageReactor for ProtoCompletionReactor {
         self.concurrent_wip
             .extend(self.concurrent.lock().expect("mutex works").drain());
         for response in messages.into_iter() {
-            let (concurrency_permit, timestamp) = self.concurrent_wip
+            let (concurrency_permit, timestamp) = self
+                .concurrent_wip
                 .remove(&response.id)
                 .expect("must not receive messages that have not been sent");
             drop(concurrency_permit);
@@ -161,7 +164,10 @@ async fn run_message_generator(
             .duration_since(UNIX_EPOCH)
             .expect("time works")
             .as_nanos();
-        concurrent.lock().expect("mutex works").insert(i, (permit, now));
+        concurrent
+            .lock()
+            .expect("mutex works")
+            .insert(i, (permit, now));
         match outbound
             .send(Rpc {
                 id: i,
@@ -181,18 +187,21 @@ async fn run_message_generator(
 }
 
 fn command(i: u64) -> rpc::Command {
-    rpc::Command::Put(
-        messages::rmemstore::Put {
-            key: Bytes::copy_from_slice(&i.to_be_bytes()),
-            value: Some(
-                messages::rmemstore::Value {
-                    kind: Some (
-                        messages::rmemstore::value::Kind::Blob(
-                            bytes::Bytes::copy_from_slice(&(i + 1).to_be_bytes()),
-                        )
-                    )
-                }
-            ),
-        }
-    )
+    let item = i % (2 << 21);
+    match i % 1000 {
+        0..100 => rpc::Command::Put(messages::rmemstore::Put {
+            key: Bytes::copy_from_slice(&item.to_be_bytes()),
+            value: Some(messages::rmemstore::Value {
+                kind: Some(messages::rmemstore::value::Kind::Blob(
+                    bytes::Bytes::copy_from_slice(&(item + 1).to_be_bytes()),
+                )),
+            }),
+        }),
+        100..1000 => rpc::Command::Get(messages::rmemstore::Get {
+            key: item.to_be_bytes().to_vec(),
+        }),
+        _ => rpc::Command::Get(messages::rmemstore::Get {
+            key: item.to_be_bytes().to_vec(),
+        }),
+    }
 }

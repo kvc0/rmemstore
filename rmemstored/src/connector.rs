@@ -7,18 +7,17 @@ use protosocket_server::ServerConnector;
 
 use crate::{rmemstore_server::RMemstoreServer, types::MemstoreItem};
 
-
 pub struct RMemstoreConnection {
     outbound: tokio::sync::mpsc::Sender<Response>,
     server: Arc<RMemstoreServer>,
 }
 
 impl RMemstoreConnection {
-    pub fn new(server: Arc<RMemstoreServer>, outbound: tokio::sync::mpsc::Sender<Response>) -> Self {
-        Self {
-            outbound,
-            server,
-        }
+    pub fn new(
+        server: Arc<RMemstoreServer>,
+        outbound: tokio::sync::mpsc::Sender<Response>,
+    ) -> Self {
+        Self { outbound, server }
     }
 }
 
@@ -35,16 +34,17 @@ impl MessageReactor for RMemstoreConnection {
                 Some(command) => command,
                 None => {
                     log::error!("bad command: {message:?}");
-                    continue
+                    continue;
                 }
             };
             let kind = match command {
                 rpc::Command::Put(put) => {
                     let Some(value_kind) = put.value.and_then(|value| value.kind) else {
                         log::error!("put with no value command: {id:?}");
-                        continue
+                        continue;
                     };
-                    self.server.put(put.key, MemstoreItem::new(value_kind.into()));
+                    self.server
+                        .put(put.key, MemstoreItem::new(value_kind.into()));
                     Some(response::Kind::Ok(true))
                 }
                 rpc::Command::Get(get) => {
@@ -54,7 +54,7 @@ impl MessageReactor for RMemstoreConnection {
             };
             if let Err(e) = self.outbound.try_send(Response { id, kind }) {
                 log::error!("overrun outbound buffer: {e:?}");
-                return protosocket::ReactorStatus::Disconnect
+                return protosocket::ReactorStatus::Disconnect;
             }
         }
 

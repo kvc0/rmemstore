@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = [ "benchmarker",
+members = [ "benchmarker", "k-cache",
     "messages",
     "rmemstored",
 ]
@@ -29,3 +29,4 @@ rand                            = { version = "0.8" }
 slab                            = { version = "0.4" }
 test-log                        = { version = "0.2" }
 tokio                           = { version = "1.39" }
+tikv-jemallocator               = { version = "0.6" }

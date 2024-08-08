@@ -20,3 +20,6 @@ protosocket-server              = { workspace = true }
 rand                            = { workspace = true }
 slab                            = { workspace = true }
 tokio                           = { workspace = true, features = ["full"] }
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator               = { workspace = true }

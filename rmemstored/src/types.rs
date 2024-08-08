@@ -7,9 +7,7 @@ pub struct MemstoreItem {
 
 impl MemstoreItem {
     pub fn new(value: MemstoreValue) -> Self {
-        Self {
-            value,
-        }
+        Self { value }
     }
 
     pub fn into_value(self) -> MemstoreValue {
@@ -23,7 +21,7 @@ pub enum MemstoreValue {
 }
 
 impl MemstoreItem {
-    pub fn weigher(key: &Vec<u8>, item: &MemstoreItem) -> u32 {
+    pub fn weigher(key: &Bytes, item: &MemstoreItem) -> u32 {
         (match &item.value {
             MemstoreValue::Blob { value } => value.len(),
         } + key.len()) as u32
@@ -40,12 +38,10 @@ impl From<messages::rmemstore::value::Kind> for MemstoreValue {
 
 impl From<MemstoreValue> for messages::rmemstore::response::Kind {
     fn from(value: MemstoreValue) -> Self {
-        messages::rmemstore::response::Kind::Value(
-            messages::rmemstore::Value {
-                kind: Some(match value {
-                    MemstoreValue::Blob { value } => messages::rmemstore::value::Kind::Blob(value),
-                })
-            }
-        )
+        messages::rmemstore::response::Kind::Value(messages::rmemstore::Value {
+            kind: Some(match value {
+                MemstoreValue::Blob { value } => messages::rmemstore::value::Kind::Blob(value),
+            }),
+        })
     }
 }

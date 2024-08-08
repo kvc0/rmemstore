@@ -8,6 +8,13 @@ mod options;
 mod rmemstore_server;
 mod types;
 
+#[cfg(not(target_env = "msvc"))]
+use tikv_jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 fn main() {
     let options = options::Options::parse();
     env_logger::Builder::from_env(
@@ -25,7 +32,7 @@ fn main() {
             static ATOMIC_ID: AtomicUsize = AtomicUsize::new(0);
             let id = ATOMIC_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             format!("conn-{}", id)
-         })
+        })
         .build()
         .expect("must be able to build worker runtime");
 
