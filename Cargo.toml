@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = [
+members = [ "benchmarker",
     "messages",
     "rmemstored",
 ]
@@ -10,15 +10,22 @@ members = [
 # Local workspace packages
 messages                        = { path = "messages" }
 
+ahash                           = { version = "0.8" }
 bytes                           = { version = "1.6" }
 criterion                       = { version = "0.5", features = ["html_reports"] }
 clap                            = { version = "4", features = ["derive", "env"] }
 env_logger                      = { version = "0.11" }
+histogram                       = { version = "0.11" }
+k-lock                          = { version = "0.2" }
 log                             = { version = "0.4" }
-mio                             = { version = "0.8" }
+mio                             = { version = "1.0" }
 moka                            = { version = "0.12" }
-prost                           = { version = "0.12" }
-prost-build                     = { version = "0.12" }
+protosocket                     = { version = "0.5" }
+protosocket-prost               = { version = "0.5" }
+protosocket-server              = { version = "0.5" }
+prost                           = { version = "0.13" }
+prost-build                     = { version = "0.13" }
 rand                            = { version = "0.8" }
 slab                            = { version = "0.4" }
 test-log                        = { version = "0.2" }
+tokio                           = { version = "1.39" }

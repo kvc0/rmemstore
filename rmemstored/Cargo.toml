@@ -1,15 +1,22 @@
 [package]
-name = "rmemstore"
+name = "rmemstored"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 messages                        = { workspace = true }
 
+ahash                           = { workspace = true }
+bytes                           = { workspace = true }
 clap                            = { workspace = true }
 env_logger                      = { workspace = true }
+k-lock                          = { workspace = true }
 log                             = { workspace = true }
 mio                             = { workspace = true, features = ["os-poll", "net"] }
 moka                            = { workspace = true, features = ["sync"] }
+protosocket                     = { workspace = true }
+protosocket-prost               = { workspace = true }
+protosocket-server              = { workspace = true }
 rand                            = { workspace = true }
 slab                            = { workspace = true }
+tokio                           = { workspace = true, features = ["full"] }

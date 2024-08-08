@@ -3,19 +3,35 @@ syntax = "proto3";
 package rmemstore;
 
 // An action to be taken
-message Action {
+message Rpc {
     uint64 id = 1;
     oneof command {
-        BlobStore blob_store = 2;
-        BlobRead blob_read = 3;
+        Put put = 2;
+        Get get = 3;
     }
 }
 
-message BlobStore {
-    bytes key = 1;
-    bytes value = 2;
+message Response {
+    uint64 id = 1;
+    oneof kind {
+        bool ok = 2;
+        Value value = 3;
+    }
 }
 
-message BlobRead {
+message Value {
+    oneof kind {
+        bytes blob = 2;
+    }
+}
+
+// Returns response.kind.ok
+message Put {
+    bytes key = 1;
+    Value value = 2;
+}
+
+// Returns response.kind.value, or no value upon a miss.
+message Get {
     bytes key = 1;
 }
