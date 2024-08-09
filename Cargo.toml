@@ -1,7 +1,9 @@
 [workspace]
 resolver = "2"
 
-members = [ "benchmarker", "k-cache",
+members = [
+    "benchmarker",
+    "k-cache",
     "messages",
     "rmemstored",
 ]
@@ -9,6 +11,7 @@ members = [ "benchmarker", "k-cache",
 [workspace.dependencies]
 # Local workspace packages
 messages                        = { path = "messages" }
+k-cache                         = { path = "k-cache" }
 
 ahash                           = { version = "0.8" }
 bytes                           = { version = "1.6" }

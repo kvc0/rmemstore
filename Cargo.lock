@@ -473,6 +473,7 @@ dependencies = [
 name = "k-cache"
 version = "0.1.0"
 dependencies = [
+ "k-lock",
  "log",
 ]
 
@@ -872,6 +873,7 @@ dependencies = [
  "bytes",
  "clap",
  "env_logger",
+ "k-cache",
  "k-lock",
  "log",
  "messages",
