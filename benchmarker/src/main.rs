@@ -35,6 +35,7 @@ async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
     let response_count = Arc::new(AtomicUsize::new(0));
     let latency = Arc::new(histogram::AtomicHistogram::new(7, 32).expect("histogram works"));
 
+    let mut uploader_tasks = tokio::task::JoinSet::new();
     for _i in 0..uploaders {
         let concurrent_count = Arc::new(Semaphore::new(128));
         let concurrent = Arc::new(Mutex::new(HashMap::with_capacity(
@@ -51,7 +52,7 @@ async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
                 },
             )
             .await?;
-        let _client_runtime = tokio::spawn(run_message_generator(
+        uploader_tasks.spawn(run_message_generator(
             concurrent_count,
             concurrent.clone(),
             outbound,
@@ -93,12 +94,9 @@ async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
     });
 
     tokio::select!(
-        // _ = connection_driver => {
-        //     log::warn!("connection driver quit");
-        // }
-        // _ = client_runtime => {
-        //     log::warn!("client runtime quit");
-        // }
+        _ = uploader_tasks.join_next() => {
+            log::warn!("uploader quit");
+        }
         _ = metrics => {
             log::warn!("metrics runtime quit");
         }
@@ -193,15 +191,15 @@ fn command(i: u64) -> rpc::Command {
             key: Bytes::copy_from_slice(&item.to_be_bytes()),
             value: Some(messages::rmemstore::Value {
                 kind: Some(messages::rmemstore::value::Kind::Blob(
-                    bytes::Bytes::copy_from_slice(&(item + 1).to_be_bytes()),
+                    Bytes::copy_from_slice(&(item + 1).to_be_bytes()),
                 )),
             }),
         }),
         100..1000 => rpc::Command::Get(messages::rmemstore::Get {
-            key: item.to_be_bytes().to_vec(),
+            key: Bytes::copy_from_slice(&item.to_be_bytes()),
         }),
         _ => rpc::Command::Get(messages::rmemstore::Get {
-            key: item.to_be_bytes().to_vec(),
+            key: Bytes::copy_from_slice(&item.to_be_bytes()),
         }),
     }
 }

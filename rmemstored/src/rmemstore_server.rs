@@ -38,7 +38,7 @@ impl RMemstoreServer {
         //     .name("cache")
         //     .build_with_hasher(ahash::RandomState::new());
         Self {
-            cache: k_cache::SegmentedCache::new(8, 2<<20),
+            cache: k_cache::SegmentedCache::new(8, 2 << 20),
         }
     }
 

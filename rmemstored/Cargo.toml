@@ -19,7 +19,7 @@ protosocket                     = { workspace = true }
 protosocket-prost               = { workspace = true }
 protosocket-server              = { workspace = true }
 rand                            = { workspace = true }
-slab                            = { workspace = true }
+thiserror                       = { workspace = true }
 tokio                           = { workspace = true, features = ["full"] }
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]

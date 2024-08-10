@@ -5,7 +5,10 @@ use protosocket::MessageReactor;
 use protosocket_prost::ProstServerConnectionBindings;
 use protosocket_server::ServerConnector;
 
-use crate::{rmemstore_server::RMemstoreServer, types::MemstoreItem};
+use crate::{
+    rmemstore_server::RMemstoreServer,
+    types::{MemstoreItem, MemstoreValue},
+};
 
 pub struct RMemstoreConnection {
     outbound: tokio::sync::mpsc::Sender<Response>,
@@ -39,17 +42,24 @@ impl MessageReactor for RMemstoreConnection {
             };
             let kind = match command {
                 rpc::Command::Put(put) => {
-                    let Some(value_kind) = put.value.and_then(|value| value.kind) else {
+                    let Some(value) = put.value else {
                         log::error!("put with no value command: {id:?}");
                         continue;
                     };
-                    self.server
-                        .put(put.key, MemstoreItem::new(value_kind.into()));
+                    let value: MemstoreValue = match value.try_into() {
+                        Ok(value) => value,
+                        Err(e) => {
+                            log::error!("bad value: {e:?}");
+                            continue;
+                        }
+                    };
+                    self.server.put(put.key, MemstoreItem::new(value));
                     Some(response::Kind::Ok(true))
                 }
                 rpc::Command::Get(get) => {
                     let item = self.server.get(&get.key);
-                    item.map(MemstoreItem::into_value).map(Into::into)
+                    item.map(MemstoreItem::into_value)
+                        .map(|v| response::Kind::Value(v.into()))
                 }
             };
             if let Err(e) = self.outbound.try_send(Response { id, kind }) {

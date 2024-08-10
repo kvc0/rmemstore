@@ -22,7 +22,12 @@ message Response {
 message Value {
     oneof kind {
         bytes blob = 2;
+        Map map = 3;
     }
+}
+
+message Map {
+    map<string, Value> map = 1;
 }
 
 // Returns response.kind.ok

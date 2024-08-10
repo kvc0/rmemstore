@@ -53,8 +53,17 @@ where
         let new_weight = self.make_room_for(&key, &value);
         self.weight += new_weight;
         let visited = Arc::new(AtomicBool::new(true));
-        self.map.insert(key.clone(), SieveEntry { data: value, visited: visited.clone() });
-        self.sieve_pool.push_back(SieveEntry { data: key.clone(), visited });
+        self.map.insert(
+            key.clone(),
+            SieveEntry {
+                data: value,
+                visited: visited.clone(),
+            },
+        );
+        self.sieve_pool.push_back(SieveEntry {
+            data: key.clone(),
+            visited,
+        });
     }
 
     pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<&V>
@@ -64,12 +73,12 @@ where
     {
         match self.map.get(key) {
             Some(entry) => {
-                entry.visited.store(true, std::sync::atomic::Ordering::Relaxed);
+                entry
+                    .visited
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
                 Some(&entry.data)
             }
-            None => {
-                None
-            }
+            None => None,
         }
     }
 
@@ -77,11 +86,16 @@ where
         let entry_weight = W::weigh(key, value);
         while self.max_weight < self.weight + entry_weight {
             let sieve_entry = &mut self.sieve_pool[self.sieve_hand];
-            let visited = sieve_entry.visited.swap(false, std::sync::atomic::Ordering::Relaxed);
+            let visited = sieve_entry
+                .visited
+                .swap(false, std::sync::atomic::Ordering::Relaxed);
             if visited {
                 self.sieve_hand = (self.sieve_hand + 1) % self.sieve_pool.len();
             } else {
-                let sieve_entry = self.sieve_pool.swap_remove_back(self.sieve_hand).expect("the index must be present");
+                let sieve_entry = self
+                    .sieve_pool
+                    .swap_remove_back(self.sieve_hand)
+                    .expect("the index must be present");
                 match self.map.remove(&sieve_entry.data) {
                     Some(removed) => {
                         let removed_weight = W::weigh(key, &removed.data);
@@ -91,7 +105,7 @@ where
                         log::debug!("garbage collecting sieve entry as {}", self.sieve_hand);
                     }
                 }
-    
+
                 if self.sieve_hand == self.sieve_pool.len() {
                     self.sieve_hand = 0;
                 }

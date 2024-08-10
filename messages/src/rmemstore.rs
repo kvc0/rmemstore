@@ -41,7 +41,7 @@ pub mod response {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Value {
-    #[prost(oneof = "value::Kind", tags = "2")]
+    #[prost(oneof = "value::Kind", tags = "2, 3")]
     pub kind: ::core::option::Option<value::Kind>,
 }
 /// Nested message and enum types in `Value`.
@@ -51,7 +51,15 @@ pub mod value {
     pub enum Kind {
         #[prost(bytes, tag = "2")]
         Blob(::prost::bytes::Bytes),
+        #[prost(message, tag = "3")]
+        Map(super::Map),
     }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Map {
+    #[prost(map = "string, message", tag = "1")]
+    pub map: ::std::collections::HashMap<::prost::alloc::string::String, Value>,
 }
 /// Returns response.kind.ok
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -66,6 +74,6 @@ pub struct Put {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Get {
-    #[prost(bytes = "vec", tag = "1")]
-    pub key: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "bytes", tag = "1")]
+    pub key: ::prost::bytes::Bytes,
 }

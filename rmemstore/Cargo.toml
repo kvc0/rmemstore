@@ -1,0 +1,17 @@
+[package]
+name = "rmemstore"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+messages                        = { workspace = true }
+
+bytes                           = { workspace = true }
+log                             = { workspace = true }
+env_logger                      = { workspace = true }
+histogram                       = { workspace = true }
+k-lock                          = { workspace = true }
+protosocket                     = { workspace = true }
+protosocket-prost               = { workspace = true }
+thiserror                       = { workspace = true }
+tokio                           = { workspace = true }

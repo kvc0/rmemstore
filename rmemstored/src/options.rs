@@ -18,7 +18,7 @@ pub struct Options {
 #[derive(Subcommand)]
 pub enum ServerMode {
     Plaintext {
-        #[arg(help = "Tcp listen port", default_value = "0.0.0.0:9001", value_parser = parse_address)]
+        #[arg(help = "Tcp listen port", default_value = "0.0.0.0:9466", value_parser = parse_address)]
         socket_address: SocketAddr,
     },
     // Tls {

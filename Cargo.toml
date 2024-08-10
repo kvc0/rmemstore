@@ -5,6 +5,8 @@ members = [
     "benchmarker",
     "k-cache",
     "messages",
+    "rmem",
+    "rmemstore",
     "rmemstored",
 ]
 
@@ -12,6 +14,7 @@ members = [
 # Local workspace packages
 messages                        = { path = "messages" }
 k-cache                         = { path = "k-cache" }
+rmemstore                       = { path = "rmemstore" }
 
 ahash                           = { version = "0.8" }
 bytes                           = { version = "1.6" }
@@ -29,7 +32,9 @@ protosocket-server              = { version = "0.5" }
 prost                           = { version = "0.13" }
 prost-build                     = { version = "0.13" }
 rand                            = { version = "0.8" }
-slab                            = { version = "0.4" }
+serde                           = { version = "1.0" }
+serde_json                      = { version = "1.0" }
+thiserror                       = { version = "1" }
 test-log                        = { version = "0.2" }
 tokio                           = { version = "1.39" }
 tikv-jemallocator               = { version = "0.6" }
