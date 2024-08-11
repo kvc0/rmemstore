@@ -9,6 +9,7 @@ fn main() {
             ".rmemstore.Put.key",
             ".rmemstore.Get.key",
         ])
+        .protoc_arg("--python_out=pyi_out:../example-python")
         .out_dir("./src")
         .compile_protos(&["../proto/rmemstore.proto"], &[proto_dir])
         .unwrap();

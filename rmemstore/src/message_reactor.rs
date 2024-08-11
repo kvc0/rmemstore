@@ -3,14 +3,13 @@ use std::{
     sync::{atomic::AtomicU64, Arc},
 };
 
-use messages::rmemstore;
 use protosocket::MessageReactor;
 use tokio::sync::oneshot;
 
 #[derive(Debug)]
 pub struct SubmittedRpc {
     pub id: u64,
-    pub completion: tokio::sync::oneshot::Sender<rmemstore::Response>,
+    pub completion: tokio::sync::oneshot::Sender<rmemstore_messages::Response>,
 }
 
 #[derive(Debug, Clone)]
@@ -21,7 +20,7 @@ pub struct RpcRegistrar {
 
 impl RpcRegistrar {
     /// Get a linked command id for which you will then send a command
-    pub fn preregister_command(&self) -> (u64, oneshot::Receiver<rmemstore::Response>) {
+    pub fn preregister_command(&self) -> (u64, oneshot::Receiver<rmemstore_messages::Response>) {
         let id = self
             .message_id
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -38,7 +37,7 @@ impl RpcRegistrar {
 pub struct RMemstoreMessageReactor {
     in_flight_submission: Arc<k_lock::Mutex<Vec<SubmittedRpc>>>,
     in_flight_buffer: Vec<SubmittedRpc>,
-    in_flight: HashMap<u64, tokio::sync::oneshot::Sender<rmemstore::Response>>,
+    in_flight: HashMap<u64, tokio::sync::oneshot::Sender<rmemstore_messages::Response>>,
 }
 
 impl RMemstoreMessageReactor {
@@ -59,7 +58,7 @@ impl RMemstoreMessageReactor {
 }
 
 impl MessageReactor for RMemstoreMessageReactor {
-    type Inbound = rmemstore::Response;
+    type Inbound = rmemstore_messages::Response;
 
     fn on_inbound_messages(
         &mut self,

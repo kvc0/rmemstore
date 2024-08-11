@@ -6,7 +6,9 @@ package rmemstore;
 message Rpc {
     uint64 id = 1;
     oneof command {
+        // Response kind: ok
         Put put = 2;
+        // Response kind: Value
         Get get = 3;
     }
 }
@@ -21,7 +23,8 @@ message Response {
 
 message Value {
     oneof kind {
-        bytes blob = 2;
+        bytes blob = 1;
+        string string = 2;
         Map map = 3;
     }
 }

@@ -13,8 +13,10 @@ pub mod rpc {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Command {
+        /// Response kind: ok
         #[prost(message, tag = "2")]
         Put(super::Put),
+        /// Response kind: Value
         #[prost(message, tag = "3")]
         Get(super::Get),
     }
@@ -41,7 +43,7 @@ pub mod response {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Value {
-    #[prost(oneof = "value::Kind", tags = "2, 3")]
+    #[prost(oneof = "value::Kind", tags = "1, 2, 3")]
     pub kind: ::core::option::Option<value::Kind>,
 }
 /// Nested message and enum types in `Value`.
@@ -49,8 +51,10 @@ pub mod value {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Kind {
-        #[prost(bytes, tag = "2")]
+        #[prost(bytes, tag = "1")]
         Blob(::prost::bytes::Bytes),
+        #[prost(string, tag = "2")]
+        String(::prost::alloc::string::String),
         #[prost(message, tag = "3")]
         Map(super::Map),
     }

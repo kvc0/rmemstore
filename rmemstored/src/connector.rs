@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use messages::rmemstore::{response, rpc, Response, Rpc};
 use protosocket::MessageReactor;
 use protosocket_prost::ProstServerConnectionBindings;
 use protosocket_server::ServerConnector;
+use rmemstore_messages::{response, rpc, Response, Rpc};
 
 use crate::{
     rmemstore_server::RMemstoreServer,

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-messages                        = { workspace = true }
+rmemstore-messages              = { workspace = true }
 
 bytes                           = { workspace = true }
 log                             = { workspace = true }
@@ -13,5 +13,6 @@ histogram                       = { workspace = true }
 k-lock                          = { workspace = true }
 protosocket                     = { workspace = true }
 protosocket-prost               = { workspace = true }
+serde                           = { workspace = true, features = ["derive"] }
 thiserror                       = { workspace = true }
 tokio                           = { workspace = true }

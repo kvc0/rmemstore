@@ -4,20 +4,20 @@ resolver = "2"
 members = [
     "benchmarker",
     "k-cache",
-    "messages",
     "rmem",
     "rmemstore",
+    "rmemstore-messages",
     "rmemstored",
 ]
 
 [workspace.dependencies]
 # Local workspace packages
-messages                        = { path = "messages" }
+rmemstore-messages              = { path = "rmemstore-messages" }
 k-cache                         = { path = "k-cache" }
 rmemstore                       = { path = "rmemstore" }
 
 ahash                           = { version = "0.8" }
-bytes                           = { version = "1.6" }
+bytes                           = { version = "1.6", features = ["serde"] }
 criterion                       = { version = "0.5", features = ["html_reports"] }
 clap                            = { version = "4", features = ["derive", "env"] }
 env_logger                      = { version = "0.11" }

@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 k-cache                         = { workspace = true }
-messages                        = { workspace = true }
+rmemstore-messages              = { workspace = true }
 
 ahash                           = { workspace = true }
 bytes                           = { workspace = true }

@@ -5,8 +5,8 @@ use std::{
 };
 
 use bytes::Bytes;
-use messages::rmemstore::{rpc, Response, Rpc};
 use protosocket::{MessageReactor, ReactorStatus};
+use rmemstore_messages::{rpc, Response, Rpc};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -187,18 +187,18 @@ async fn run_message_generator(
 fn command(i: u64) -> rpc::Command {
     let item = i % (2 << 21);
     match i % 1000 {
-        0..100 => rpc::Command::Put(messages::rmemstore::Put {
+        0..100 => rpc::Command::Put(rmemstore_messages::Put {
             key: Bytes::copy_from_slice(&item.to_be_bytes()),
-            value: Some(messages::rmemstore::Value {
-                kind: Some(messages::rmemstore::value::Kind::Blob(
+            value: Some(rmemstore_messages::Value {
+                kind: Some(rmemstore_messages::value::Kind::Blob(
                     Bytes::copy_from_slice(&(item + 1).to_be_bytes()),
                 )),
             }),
         }),
-        100..1000 => rpc::Command::Get(messages::rmemstore::Get {
+        100..1000 => rpc::Command::Get(rmemstore_messages::Get {
             key: Bytes::copy_from_slice(&item.to_be_bytes()),
         }),
-        _ => rpc::Command::Get(messages::rmemstore::Get {
+        _ => rpc::Command::Get(rmemstore_messages::Get {
             key: Bytes::copy_from_slice(&item.to_be_bytes()),
         }),
     }

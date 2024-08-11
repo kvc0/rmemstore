@@ -133,9 +133,9 @@ dependencies = [
  "env_logger",
  "histogram",
  "log",
- "messages",
  "protosocket",
  "protosocket-prost",
+ "rmemstore-messages",
  "tokio",
 ]
 
@@ -156,6 +156,9 @@ name = "bytes"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cc"
@@ -528,15 +531,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d"
 
 [[package]]
-name = "messages"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "prost",
- "prost-build",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -875,10 +869,10 @@ checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
 name = "rmem"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "clap",
  "env_logger",
  "log",
- "messages",
  "rmemstore",
  "serde",
  "serde_json",
@@ -894,11 +888,21 @@ dependencies = [
  "histogram",
  "k-lock",
  "log",
- "messages",
  "protosocket",
  "protosocket-prost",
+ "rmemstore-messages",
+ "serde",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "rmemstore-messages"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "prost",
+ "prost-build",
 ]
 
 [[package]]
@@ -912,13 +916,13 @@ dependencies = [
  "k-cache",
  "k-lock",
  "log",
- "messages",
  "mio",
  "moka",
  "protosocket",
  "protosocket-prost",
  "protosocket-server",
  "rand",
+ "rmemstore-messages",
  "thiserror",
  "tikv-jemallocator",
  "tokio",

@@ -1,6 +1,6 @@
 use ahash::HashMap;
 use bytes::Bytes;
-use messages::rmemstore::Map;
+use rmemstore_messages::Map;
 
 #[derive(Clone, Debug)]
 pub struct MemstoreItem {
@@ -20,6 +20,7 @@ impl MemstoreItem {
 #[derive(Clone, Debug)]
 pub enum MemstoreValue {
     Blob { value: Bytes },
+    String { value: String },
     Map { map: HashMap<String, MemstoreValue> },
 }
 
@@ -27,6 +28,7 @@ impl MemstoreValue {
     pub fn size(&self) -> usize {
         match self {
             MemstoreValue::Blob { value } => value.len(),
+            MemstoreValue::String { value } => value.len(),
             MemstoreValue::Map { map } => map.iter().map(|(k, v)| k.len() + v.size()).sum(),
         }
     }
@@ -52,14 +54,15 @@ pub enum ValueError {
     MissingAttribute(&'static str),
 }
 
-impl TryFrom<messages::rmemstore::Value> for MemstoreValue {
+impl TryFrom<rmemstore_messages::Value> for MemstoreValue {
     type Error = ValueError;
 
-    fn try_from(value: messages::rmemstore::Value) -> Result<Self, Self::Error> {
+    fn try_from(value: rmemstore_messages::Value) -> Result<Self, Self::Error> {
         match value.kind {
             Some(kind) => Ok(match kind {
-                messages::rmemstore::value::Kind::Blob(value) => MemstoreValue::Blob { value },
-                messages::rmemstore::value::Kind::Map(map) => MemstoreValue::Map {
+                rmemstore_messages::value::Kind::Blob(value) => MemstoreValue::Blob { value },
+                rmemstore_messages::value::Kind::String(value) => MemstoreValue::String { value },
+                rmemstore_messages::value::Kind::Map(map) => MemstoreValue::Map {
                     map: map
                         .map
                         .into_iter()
@@ -72,12 +75,13 @@ impl TryFrom<messages::rmemstore::Value> for MemstoreValue {
     }
 }
 
-impl From<MemstoreValue> for messages::rmemstore::Value {
+impl From<MemstoreValue> for rmemstore_messages::Value {
     fn from(value: MemstoreValue) -> Self {
-        messages::rmemstore::Value {
+        rmemstore_messages::Value {
             kind: Some(match value {
-                MemstoreValue::Blob { value } => messages::rmemstore::value::Kind::Blob(value),
-                MemstoreValue::Map { map } => messages::rmemstore::value::Kind::Map(Map {
+                MemstoreValue::Blob { value } => rmemstore_messages::value::Kind::Blob(value),
+                MemstoreValue::String { value } => rmemstore_messages::value::Kind::String(value),
+                MemstoreValue::Map { map } => rmemstore_messages::value::Kind::Map(Map {
                     map: map.into_iter().map(|(k, v)| (k, v.into())).collect(),
                 }),
             }),

@@ -1,11 +1,10 @@
-use bytes::Buf;
-use messages::rmemstore;
 use protosocket_prost::ClientRegistry;
 use tokio::sync::mpsc;
 
 use crate::{
-    conversions::{IntoKey, IntoValue},
-    message_reactor::{RMemstoreMessageReactor, RpcRegistrar}, Error,
+    message_reactor::{RMemstoreMessageReactor, RpcRegistrar},
+    types::{IntoKey, IntoValue, MemstoreValue},
+    Error,
 };
 
 pub struct ClientConfiguration {
@@ -25,7 +24,7 @@ impl ClientConfiguration {
         let (registrar, reactor) = RMemstoreMessageReactor::new();
         let outbound = self
             .registry
-            .register_client::<rmemstore::Rpc, rmemstore::Response, RMemstoreMessageReactor>(
+            .register_client::<rmemstore_messages::Rpc, rmemstore_messages::Response, RMemstoreMessageReactor>(
                 socket_address,
                 reactor,
             )
@@ -35,14 +34,15 @@ impl ClientConfiguration {
     }
 }
 
-#[derive(Debug)]
+/// Cheap to clone, this is how you call rmemstored.
+#[derive(Debug, Clone)]
 pub struct Client {
     registrar: RpcRegistrar,
-    outbound: mpsc::Sender<rmemstore::Rpc>,
+    outbound: mpsc::Sender<rmemstore_messages::Rpc>,
 }
 
 impl Client {
-    pub fn new(registrar: RpcRegistrar, outbound: mpsc::Sender<rmemstore::Rpc>) -> Self {
+    pub fn new(registrar: RpcRegistrar, outbound: mpsc::Sender<rmemstore_messages::Rpc>) -> Self {
         Self {
             registrar,
             outbound,
@@ -51,11 +51,11 @@ impl Client {
 
     async fn send_command(
         &self,
-        command: rmemstore::rpc::Command,
-    ) -> Result<rmemstore::Response, crate::Error> {
+        command: rmemstore_messages::rpc::Command,
+    ) -> Result<rmemstore_messages::Response, crate::Error> {
         let (id, completion) = self.registrar.preregister_command();
         self.outbound
-            .send(rmemstore::Rpc {
+            .send(rmemstore_messages::Rpc {
                 id: id,
                 command: Some(command),
             })
@@ -67,9 +67,9 @@ impl Client {
     }
 
     pub async fn put(&self, key: impl IntoKey, value: impl IntoValue) -> Result<(), crate::Error> {
-        let command = rmemstore::rpc::Command::Put(rmemstore::Put {
+        let command = rmemstore_messages::rpc::Command::Put(rmemstore_messages::Put {
             key: key.into_key(),
-            value: Some(rmemstore::Value {
+            value: Some(rmemstore_messages::Value {
                 kind: Some(value.into_value()),
             }),
         });
@@ -77,39 +77,19 @@ impl Client {
         Ok(())
     }
 
-    pub async fn get(&self, key: impl IntoKey) -> Result<(), crate::Error> {
-        let command = rmemstore::rpc::Command::Get(rmemstore::Get {
+    pub async fn get(&self, key: impl IntoKey) -> Result<MemstoreValue, crate::Error> {
+        let command = rmemstore_messages::rpc::Command::Get(rmemstore_messages::Get {
             key: key.into_key(),
         });
         let response = self.send_command(command).await?;
         let Some(response) = response.kind else {
-            return Err(Error::MalformedResponse("missing response kind"))
+            return Err(Error::MalformedResponse("missing response kind"));
         };
         match response {
-            rmemstore::response::Kind::Value(v) => {
-                let Some(value) = v.kind else {
-                    return Err(Error::MalformedResponse("missing value kind"))
-                };
-                match value {
-                    rmemstore::value::Kind::Blob(v) => {
-                        match std::io::read_to_string(v.reader()) {
-                            Ok(s) => {
-                                println!("{s}");
-                            }
-                            Err(e) => {
-                                println!("unsupported value: {e:?}");
-                            }
-                        }
-                    }
-                    rmemstore::value::Kind::Map(map) => {
-                        println!("{:#?}", map.map);
-                    }
-                }
-            }
+            rmemstore_messages::response::Kind::Value(value) => value.try_into(),
             _ => {
                 return Err(Error::MalformedResponse("incorrect response type"));
             }
         }
-        Ok(())
     }
 }
