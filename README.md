@@ -3,8 +3,8 @@
 Fast, type-aware data structure cache.
 
 # About
-`rmemstore` is similar to other caches you may have used, like redis, but it has some different goals than most.
-The primary aims of `rmemstore` is to be typesafe, fast, and useful.
+`rmemstore` is similar to other caches you may have used, like redis, but it has some differences.
+The primary aims of `rmemstore` is to be typesafe, fast, and useful as a data structure cache.
 
 Of course, usefulness is an ongoing exercise, as it takes time to grow features. However, `rmemstore` is a type-
 aware data structure store, which means you can store maps of maps - and the server knows what that means.
