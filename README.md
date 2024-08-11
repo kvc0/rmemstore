@@ -10,7 +10,7 @@ Of course, usefulness is an ongoing exercise, as it takes time to grow features.
 aware data structure store, which means you can store maps of maps - and the server knows what that means.
 
 It is fast now, however. `rmemstore` uses the new Sieve eviction strategy when pressed to eviction. With a 10:1
-read:write ratio, 2 threads on my 11 year old Intel i5 server are capable of over 3.3 million operations per
+read:write ratio, 2 threads on an 11 year old Intel i5 server are capable of over 3.3 million operations per
 second. Even while being pushed to eviction.
 
 `rmemstore` is built on "safe" Rust code. It doesn't rely on subtle tricks to get speed. It does use standard
