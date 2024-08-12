@@ -73,7 +73,7 @@ impl Signals {
                 },
                 None => {
                     log::trace!("no signals to handle.");
-                },
+                }
             }
         }
     }
