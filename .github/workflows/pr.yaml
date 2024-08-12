@@ -1,0 +1,29 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    - uses: Swatinem/rust-cache@v2
+
+    - name: Rustfmt
+      run: cargo fmt -- --check
+    - name: Clippy
+      run: |
+        cargo --version
+        cargo clippy --version
+        cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+    - name: Run tests
+      run: cargo test --verbose
