@@ -4,10 +4,11 @@ resolver = "2"
 members = [
     "benchmarker",
     "k-cache",
-    "rmem",
     "rmemstore",
     "rmemstore-messages",
     "rmemstored",
+    "rms",
+    "signals",
 ]
 
 [workspace.package]
@@ -25,6 +26,7 @@ categories = ["web-programming"]
 rmemstore-messages              = { path = "rmemstore-messages", version = "0" }
 k-cache                         = { path = "k-cache", version = "0" }
 rmemstore                       = { path = "rmemstore", version = "0" }
+signals                         = { path = "signals", version = "0" }
 
 ahash                           = { version = "0.8" }
 bytes                           = { version = "1.6", features = ["serde"] }
@@ -36,6 +38,8 @@ k-lock                          = { version = "0.2" }
 log                             = { version = "0.4" }
 mio                             = { version = "1.0" }
 moka                            = { version = "0.12" }
+num_cpus                        = { version = "1.16" }
+parse-size                      = { version = "1" }
 protosocket                     = { version = "0.5" }
 protosocket-prost               = { version = "0.5" }
 protosocket-server              = { version = "0.5" }
@@ -44,6 +48,7 @@ prost-build                     = { version = "0.13" }
 rand                            = { version = "0.8" }
 serde                           = { version = "1.0" }
 serde_json                      = { version = "1.0" }
+signal-hook                     = { version = "0.3" }
 thiserror                       = { version = "1" }
 test-log                        = { version = "0.2" }
 tokio                           = { version = "1.39" }

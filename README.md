@@ -82,26 +82,26 @@ client
     .await?;
 ```
 ## Bash
-You can use `rmem` to put and get.
+You can use `rms` to put and get.
 
 For strings, the output is a little more brief.
 ```bash
-$ rmem put foo `{"string": "some value"}`
+$ rms put foo `{"string": "some value"}`
 ```
 
 ```bash
-$ rmem get foo
+$ rms get foo
 some value
 ```
 
 For maps, the interaction has some verbosity, but it is typed!
 
 ```bash
-$ rmem put foo '{"map": {"bar":{"map":{"baz":{"string": "haha"}, "other": {"string": "verbose"}}, "outer": {"string": "another"}}}}'
+$ rms put foo '{"map": {"bar":{"map":{"baz":{"string": "haha"}, "other": {"string": "verbose"}}, "outer": {"string": "another"}}}}'
 ```
 
 ```
-$ rmem get foo
+$ rms get foo
 {
   "bar": {
     "map": {

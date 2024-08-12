@@ -585,6 +585,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
 
 [[package]]
+name = "num_cpus"
+version = "1.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
+dependencies = [
+ "hermit-abi",
+ "libc",
+]
+
+[[package]]
 name = "object"
 version = "0.36.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -621,6 +631,12 @@ dependencies = [
  "smallvec",
  "windows-targets",
 ]
+
+[[package]]
+name = "parse-size"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "944553dd59c802559559161f9816429058b869003836120e262e8caec061b7ae"
 
 [[package]]
 name = "petgraph"
@@ -875,20 +891,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 
 [[package]]
-name = "rmem"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "clap",
- "env_logger",
- "log",
- "rmemstore",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "rmemstore"
 version = "0.1.1"
 dependencies = [
@@ -927,13 +929,30 @@ dependencies = [
  "log",
  "mio",
  "moka",
+ "num_cpus",
+ "parse-size",
  "protosocket",
  "protosocket-prost",
  "protosocket-server",
  "rand",
  "rmemstore-messages",
+ "signals",
  "thiserror",
  "tikv-jemallocator",
+ "tokio",
+]
+
+[[package]]
+name = "rms"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "clap",
+ "env_logger",
+ "log",
+ "rmemstore",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
@@ -1016,12 +1035,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "signal-hook"
+version = "0.3.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8621587d4798caf8eb44879d42e56b9a93ea5dcd315a6487c357130095b62801"
+dependencies = [
+ "libc",
+ "signal-hook-registry",
+]
+
+[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9e9e0b4211b72e7b8b6e85c807d36c212bdb33ea8587f7569562a84df5465b1"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "signals"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "signal-hook",
+ "tokio",
 ]
 
 [[package]]

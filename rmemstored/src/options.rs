@@ -2,20 +2,32 @@ use std::{io, net::SocketAddr};
 
 use clap::{Parser, Subcommand};
 
-#[derive(Parser)]
+#[derive(Parser, Clone, Debug)]
 #[clap(about = "Memstored service")]
 pub struct Options {
     #[arg(long, default_value = "info")]
     pub log_level: String,
 
-    #[arg(long, default_value = "1")]
+    /// 0 means n_cpus - 1
+    #[arg(long, default_value = "0")]
     pub worker_threads: usize,
+
+    /// 0 means n_cpus - 1
+    #[arg(long = "size", default_value = "1gib", value_parser=parse_bytes)]
+    pub cache_bytes: usize,
 
     #[command(subcommand)]
     pub run_mode: ServerMode,
 }
 
-#[derive(Subcommand)]
+fn parse_bytes(s: &str) -> Result<usize, clap::Error> {
+    parse_size::parse_size(s).map(|n| n as usize).map_err(|e| {
+        log::error!("{e:?}");
+        clap::Error::new(clap::error::ErrorKind::InvalidValue)
+    })
+}
+
+#[derive(Subcommand, Debug, Clone)]
 pub enum ServerMode {
     Plaintext {
         #[arg(help = "Tcp listen port", default_value = "0.0.0.0:9466", value_parser = parse_address)]
