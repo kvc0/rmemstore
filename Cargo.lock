@@ -127,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "benchmarker"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "env_logger",
@@ -486,7 +486,7 @@ dependencies = [
 
 [[package]]
 name = "k-cache"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "k-lock",
  "log",
@@ -890,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "rmemstore"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "env_logger",
@@ -907,7 +907,7 @@ dependencies = [
 
 [[package]]
 name = "rmemstore-messages"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "prost",

@@ -11,7 +11,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 authors = ["kvc0"]
 repository = "https://github.com/kvc0/rmemstore"
 edition = "2021"
