@@ -22,9 +22,9 @@ categories = ["web-programming"]
 
 [workspace.dependencies]
 # Local workspace packages
-rmemstore-messages              = { path = "rmemstore-messages" }
-k-cache                         = { path = "k-cache" }
-rmemstore                       = { path = "rmemstore" }
+rmemstore-messages              = { path = "rmemstore-messages", version = "0" }
+k-cache                         = { path = "k-cache", version = "0" }
+rmemstore                       = { path = "rmemstore", version = "0" }
 
 ahash                           = { version = "0.8" }
 bytes                           = { version = "1.6", features = ["serde"] }
