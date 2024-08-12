@@ -33,12 +33,12 @@ where
             .put(key, value)
     }
 
-    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
+    pub fn get<Q>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
-        Q: std::hash::Hash + Eq,
+        Q: std::hash::Hash + Eq + ?Sized,
     {
-        let slot = self.hasher.hash_one(&key) as usize % self.segments.len();
+        let slot = self.hasher.hash_one(key) as usize % self.segments.len();
         self.segments[slot]
             .lock()
             .expect("mutex must not be poisoned")

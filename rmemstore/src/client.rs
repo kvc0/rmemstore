@@ -12,6 +12,7 @@ pub struct ClientConfiguration {
 }
 
 impl ClientConfiguration {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let registry = protosocket_prost::ClientRegistry::new(tokio::runtime::Handle::current());
         Self { registry }
@@ -56,7 +57,7 @@ impl Client {
         let (id, completion) = self.registrar.preregister_command();
         self.outbound
             .send(rmemstore_messages::Rpc {
-                id: id,
+                id,
                 command: Some(command),
             })
             .await
@@ -87,9 +88,7 @@ impl Client {
         };
         match response {
             rmemstore_messages::response::Kind::Value(value) => value.try_into(),
-            _ => {
-                return Err(Error::MalformedResponse("incorrect response type"));
-            }
+            _ => Err(Error::MalformedResponse("incorrect response type")),
         }
     }
 }

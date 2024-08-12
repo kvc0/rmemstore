@@ -3,7 +3,7 @@ fn main() {
     let proto_dir = "../proto";
 
     prost_build::Config::new()
-        .bytes(&[
+        .bytes([
             ".rmemstore.Value.blob",
             ".rmemstore.Get.blob",
             ".rmemstore.Put.key",

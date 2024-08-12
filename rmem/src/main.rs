@@ -45,7 +45,7 @@ async fn run(args: Args) -> Result<(), Box<dyn std::error::Error>> {
                 rmemstore::types::MemstoreValue::Map { map } => {
                     serde_json::to_writer_pretty(std::io::stdout(), &map)
                         .expect("must be printable");
-                    println!("");
+                    println!();
                 }
             }
         }

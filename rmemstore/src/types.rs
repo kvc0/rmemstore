@@ -21,7 +21,7 @@ pub trait IntoValue {
 
 impl IntoKey for Bytes {
     fn into_key(self) -> Bytes {
-        self.into()
+        self
     }
 }
 
