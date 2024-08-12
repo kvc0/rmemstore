@@ -2,6 +2,7 @@
 name = "benchmarker"
 version = "0.1.1"
 edition = "2021"
+publish = false
 
 [dependencies]
 rmemstore-messages              = { workspace = true }
