@@ -120,3 +120,11 @@ $ rms get foo
 Don't want to use rust? Any tool or language capable of sending and receiving protocol buffers-encoded bytes over
 tcp is capable of using `rmemstored`. See [`example-python`](./example-python/main.py) for an example in another
 language. Note that python, in particular, is a bit of a pain due to not exposing the protobuf varint encoder.
+
+# Comparisons
+## k-cache internal cache implementation
+Rather than using the popular `moka` cache, rmemstore has its own cache implementation. Here's an example
+result from [the benchmarks](./k-cache/benches) that motivates this deviation:
+![benchmark data showing 2.2-5x better latency for k-cache](./k-cache/example-benchmark-run.svg)
+You can see that the benchmark under eviction favors k-cache at all thread counts. Note that sieve pays on
+insert, so this 100% insert benchmark is pessimistic, and get will outperform by a wider margin.
