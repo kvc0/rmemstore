@@ -2,20 +2,7 @@ use ahash::HashMap;
 use bytes::Bytes;
 use rmemstore_messages::Map;
 
-#[derive(Clone, Debug)]
-pub struct MemstoreItem {
-    value: MemstoreValue,
-}
-
-impl MemstoreItem {
-    pub fn new(value: MemstoreValue) -> Self {
-        Self { value }
-    }
-
-    pub fn into_value(self) -> MemstoreValue {
-        self.value
-    }
-}
+use super::ValueError;
 
 #[derive(Clone, Debug)]
 pub enum MemstoreValue {
@@ -32,26 +19,6 @@ impl MemstoreValue {
             MemstoreValue::Map { map } => map.iter().map(|(k, v)| k.len() + v.size()).sum(),
         }
     }
-}
-
-impl MemstoreItem {
-    pub fn weigher(key: &Bytes, item: &MemstoreItem) -> u32 {
-        (item.value.size() + key.len()) as u32
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct MemstoreWeigher;
-impl k_cache::Weigher<Bytes, MemstoreItem> for MemstoreWeigher {
-    fn weigh(key: &Bytes, item: &MemstoreItem) -> usize {
-        MemstoreItem::weigher(key, item) as usize
-    }
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum ValueError {
-    #[error("Missing attribute: {0}")]
-    MissingAttribute(&'static str),
 }
 
 impl TryFrom<rmemstore_messages::Value> for MemstoreValue {

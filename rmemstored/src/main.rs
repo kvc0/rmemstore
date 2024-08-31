@@ -3,6 +3,8 @@ use std::sync::atomic::AtomicUsize;
 use clap::Parser;
 use rmemstore_server::RMemstoreServer;
 
+mod commands;
+mod connection;
 mod connector;
 mod options;
 mod rmemstore_server;
