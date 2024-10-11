@@ -902,9 +902,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "742c74d45f6b1a42e459fca8e7c6239965e0783e74d840722820881144f2b223"
+checksum = "5f82efa7c72b386beee9f492347542c1a7696cfa7aef384baa1181391599e2ab"
 dependencies = [
  "bytes",
  "futures",
@@ -916,9 +916,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-prost"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c2cce208f9f1b0a6446ea8b584fb31b78e44a4907c680ca0e6c96f698b6c78a"
+checksum = "84d6f0e639e0ecf79bafb13aa4d7d428a22863daeccabc98ecd30a8da41eb604"
 dependencies = [
  "bytes",
  "log",
@@ -930,9 +930,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-server"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbe074a245bcf2988861ae476a7d5aafd171bc921f76f4b6e297dd52cc87c1ad"
+checksum = "ff74bc963b0ef899aad16e26089b37f245cff42e1a759b38c0fb9a08c6e432a6"
 dependencies = [
  "bytes",
  "futures",

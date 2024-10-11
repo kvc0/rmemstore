@@ -77,22 +77,22 @@ async fn run_main(uploaders: usize) -> Result<(), Box<dyn std::error::Error>> {
             let p90 = *latency
                 .percentile(0.9)
                 .unwrap_or_default()
-                .expect("come on")
-                .range()
+                .map(|b| b.range())
+                .unwrap_or(0..=0)
                 .end() as f64
                 / 1000.0;
             let p999 = *latency
                 .percentile(0.999)
                 .unwrap_or_default()
-                .expect("come on")
-                .range()
+                .map(|b| b.range())
+                .unwrap_or(0..=0)
                 .end() as f64
                 / 1000.0;
             let p9999 = *latency
                 .percentile(0.9999)
                 .unwrap_or_default()
-                .expect("come on")
-                .range()
+                .map(|b| b.range())
+                .unwrap_or(0..=0)
                 .end() as f64
                 / 1000.0;
             let megabytes_rate = total_megabytes / interval.period().as_secs_f64();
