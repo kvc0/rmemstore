@@ -16,6 +16,10 @@ pub struct Options {
     #[arg(long = "size", default_value = "1gib", value_parser=parse_bytes)]
     pub cache_bytes: usize,
 
+    /// max buffer size
+    #[arg(long = "buffer", default_value = "128mib", value_parser=parse_bytes)]
+    pub request_buffer_bytes: usize,
+
     #[command(subcommand)]
     pub run_mode: ServerMode,
 }

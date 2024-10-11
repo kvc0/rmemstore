@@ -11,6 +11,16 @@ members = [
     "signals",
 ]
 
+[profile.release]
+# Include debug symbols for flame graphs and tracebacks
+debug = true
+# We only have a couple cores on the builder anyway, and the default of 16
+# can be reduced further to help it notice more possible optimizations.
+codegen-units = 1
+# https://llvm.org/docs/LinkTimeOptimization.html
+# let's link the best binary science knows how to link
+lto = "fat"
+
 [workspace.package]
 version = "0.1.1"
 authors = ["kvc0"]
@@ -40,9 +50,9 @@ mio                             = { version = "1.0" }
 moka                            = { version = "0.12" }
 num_cpus                        = { version = "1.16" }
 parse-size                      = { version = "1" }
-protosocket                     = { version = "0.5" }
-protosocket-prost               = { version = "0.5" }
-protosocket-server              = { version = "0.5" }
+protosocket                     = { version = "0.6" }
+protosocket-prost               = { version = "0.6" }
+protosocket-server              = { version = "0.6" }
 prost                           = { version = "0.13" }
 prost-build                     = { version = "0.13" }
 rand                            = { version = "0.8" }

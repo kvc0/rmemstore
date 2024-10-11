@@ -52,13 +52,14 @@ fn main() {
 
     match options.run_mode {
         options::ServerMode::Plaintext { socket_address } => {
-            let server = connection_runtime
+            let mut server = connection_runtime
                 .block_on(protosocket_server::ProtosocketServer::new(
                     socket_address,
                     connection_runtime.handle().clone(),
                     connector::RMemstoreConnector::new(server),
                 ))
                 .expect("can create a server");
+            server.set_max_buffer_length(options.request_buffer_bytes);
             log::info!("serving on {socket_address}");
             let join_handle = connection_runtime.spawn(server);
             connection_runtime.block_on(async move {

@@ -141,6 +141,7 @@ dependencies = [
  "log",
  "protosocket",
  "protosocket-prost",
+ "rand",
  "rmemstore-messages",
  "tokio",
 ]
@@ -275,7 +276,7 @@ dependencies = [
  "clap",
  "criterion-plot",
  "is-terminal",
- "itertools 0.10.5",
+ "itertools",
  "num-traits",
  "once_cell",
  "oorandom",
@@ -296,7 +297,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
  "cast",
- "itertools 0.10.5",
+ "itertools",
 ]
 
 [[package]]
@@ -577,15 +578,6 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -873,7 +865,7 @@ checksum = "5bb182580f71dd070f88d01ce3de9f4da5021db7115d2e1c3605a754153b77c1"
 dependencies = [
  "bytes",
  "heck",
- "itertools 0.13.0",
+ "itertools",
  "log",
  "multimap",
  "once_cell",
@@ -893,7 +885,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18bec9b0adc4eba778b33684b7ba3e7137789434769ee3ce3930463ef904cfca"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn",
@@ -910,9 +902,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.5.4"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94c4c05c87d7021358f76553619c9307501ce5aab8d1ba2472c847c27737f20f"
+checksum = "742c74d45f6b1a42e459fca8e7c6239965e0783e74d840722820881144f2b223"
 dependencies = [
  "bytes",
  "futures",
@@ -924,9 +916,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-prost"
-version = "0.5.4"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3efba9f34b3221a284befa1a74e3e14b3cd9280cd5f40a66a1884af4e2debe60"
+checksum = "9c2cce208f9f1b0a6446ea8b584fb31b78e44a4907c680ca0e6c96f698b6c78a"
 dependencies = [
  "bytes",
  "log",
@@ -938,9 +930,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-server"
-version = "0.5.4"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48bb4b6d3ad7c77724f690882594fb5826b2a31f65206bffe8df250abde9eb23"
+checksum = "cbe074a245bcf2988861ae476a7d5aafd171bc921f76f4b6e297dd52cc87c1ad"
 dependencies = [
  "bytes",
  "futures",

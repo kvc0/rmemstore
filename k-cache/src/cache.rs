@@ -53,13 +53,22 @@ where
         let new_weight = self.make_room_for(&key, &value);
         self.weight += new_weight;
         let visited = Arc::new(AtomicBool::new(true));
-        self.map.insert(
+        if let Some(replaced) = self.map.insert(
             key.clone(),
             SieveEntry {
                 data: value,
                 visited: visited.clone(),
             },
-        );
+        ) {
+            let replaced_weight = W::weigh(&key, &replaced.data);
+            match self.weight.checked_sub(replaced_weight) {
+                Some(new_weight) => self.weight = new_weight,
+                None => {
+                    log::error!("weight underflow");
+                    self.weight = 0;
+                }
+            }
+        }
         self.sieve_pool.push_back(SieveEntry {
             data: key.clone(),
             visited,
@@ -92,14 +101,20 @@ where
             if visited {
                 self.sieve_hand = (self.sieve_hand + 1) % self.sieve_pool.len();
             } else {
-                let sieve_entry = self
+                let sieve_key_entry = self
                     .sieve_pool
                     .swap_remove_back(self.sieve_hand)
                     .expect("the index must be present");
-                match self.map.remove(&sieve_entry.data) {
+                match self.map.remove(&sieve_key_entry.data) {
                     Some(removed) => {
-                        let removed_weight = W::weigh(key, &removed.data);
-                        self.weight -= removed_weight;
+                        let removed_weight = W::weigh(&sieve_key_entry.data, &removed.data);
+                        match self.weight.checked_sub(removed_weight) {
+                            Some(new_weight) => self.weight = new_weight,
+                            None => {
+                                log::error!("weight underflow");
+                                self.weight = 0;
+                            }
+                        }
                     }
                     None => {
                         log::debug!("garbage collecting sieve entry as {}", self.sieve_hand);

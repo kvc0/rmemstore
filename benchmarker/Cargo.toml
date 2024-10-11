@@ -13,4 +13,5 @@ env_logger                      = { workspace = true }
 histogram                       = { workspace = true }
 protosocket                     = { workspace = true }
 protosocket-prost               = { workspace = true }
+rand                            = { workspace = true }
 tokio                           = { workspace = true, features = ["full"] }
