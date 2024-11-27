@@ -139,9 +139,10 @@ dependencies = [
  "env_logger",
  "histogram",
  "log",
- "protosocket",
+ "protosocket 0.7.2",
  "protosocket-prost",
  "rand",
+ "rmemstore",
  "rmemstore-messages",
  "tokio",
 ]
@@ -669,7 +670,6 @@ checksum = "4569e456d394deccd22ce1c1913e6ea0e54519f577285001215d33557431afe4"
 dependencies = [
  "hermit-abi",
  "libc",
- "log",
  "wasi",
  "windows-sys 0.52.0",
 ]
@@ -915,31 +915,46 @@ dependencies = [
 ]
 
 [[package]]
-name = "protosocket-prost"
-version = "0.6.1"
+name = "protosocket"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84d6f0e639e0ecf79bafb13aa4d7d428a22863daeccabc98ecd30a8da41eb604"
+checksum = "332a43ae4559be5d0e3fa567439420e0add3af7b4c29c6bf6550ebed0c9196e5"
+dependencies = [
+ "bytes",
+ "futures",
+ "log",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "protosocket-prost"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c69316bee5592b4fa76632667ffd1f2bd18306c479c734f90813eaef9b246cb1"
 dependencies = [
  "bytes",
  "log",
  "prost",
- "protosocket",
+ "protosocket 0.6.1",
  "thiserror",
  "tokio",
 ]
 
 [[package]]
-name = "protosocket-server"
-version = "0.6.1"
+name = "protosocket-rpc"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff74bc963b0ef899aad16e26089b37f245cff42e1a759b38c0fb9a08c6e432a6"
+checksum = "6cb8bcd7eb7f82628a2bf91b8f14e3e79d5143483e4db68a6b43c51aeaa4b572"
 dependencies = [
- "bytes",
  "futures",
+ "k-lock",
  "log",
- "protosocket",
+ "protosocket 0.6.1",
  "thiserror",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1078,8 +1093,9 @@ dependencies = [
  "histogram",
  "k-lock",
  "log",
- "protosocket",
+ "protosocket 0.7.2",
  "protosocket-prost",
+ "protosocket-rpc",
  "rmemstore-messages",
  "serde",
  "thiserror",
@@ -1093,6 +1109,7 @@ dependencies = [
  "bytes",
  "prost",
  "prost-build",
+ "protosocket-rpc",
 ]
 
 [[package]]
@@ -1103,16 +1120,15 @@ dependencies = [
  "bytes",
  "clap",
  "env_logger",
+ "futures",
  "k-cache",
  "k-lock",
  "log",
- "mio",
- "moka",
  "num_cpus",
  "parse-size",
- "protosocket",
+ "protosocket 0.7.2",
  "protosocket-prost",
- "protosocket-server",
+ "protosocket-rpc",
  "rand",
  "rmemstore-messages",
  "signals",

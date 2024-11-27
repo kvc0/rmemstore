@@ -20,6 +20,7 @@ histogram                       = { workspace = true }
 k-lock                          = { workspace = true }
 protosocket                     = { workspace = true }
 protosocket-prost               = { workspace = true }
+protosocket-rpc                 = { workspace = true }
 serde                           = { workspace = true, features = ["derive"] }
 thiserror                       = { workspace = true }
 tokio                           = { workspace = true }

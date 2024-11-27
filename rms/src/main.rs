@@ -18,15 +18,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn run(args: Args) -> Result<(), Box<dyn std::error::Error>> {
-    let mut configuration = rmemstore::ClientConfiguration::new();
-    let client = configuration.connect(args.host.to_string()).await?;
+    let mut configuration = rmemstore::ConnectionConfiguration::default();
+    configuration.max_message_size(32 * (1 << 20));
+    let client = rmemstore::Client::connect(
+        args.host
+            .to_string()
+            .parse()
+            .expect("host must be a socket address"),
+        configuration,
+    )
+    .await?;
 
     match args.command {
         args::Command::Put { key, value } => {
             client.put(key, value).await?;
         }
         args::Command::Get { key } => {
-            let result = client.get(key).await?;
+            let result = match client.get(key).await? {
+                Some(hit) => hit,
+                None => {
+                    eprintln!("miss");
+                    return Ok(());
+                }
+            };
             match result {
                 rmemstore::types::MemstoreValue::Blob { value } => {
                     match std::io::read_to_string(value.reader()) {

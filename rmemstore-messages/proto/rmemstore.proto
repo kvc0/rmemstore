@@ -5,19 +5,21 @@ package rmemstore;
 // An action to be taken
 message Rpc {
     uint64 id = 1;
+    uint32 code = 2;
     oneof command {
         // Response kind: ok
-        Put put = 2;
+        Put put = 3;
         // Response kind: Value
-        Get get = 3;
+        Get get = 4;
     }
 }
 
 message Response {
     uint64 id = 1;
+    uint32 code = 2;
     oneof kind {
-        bool ok = 2;
-        Value value = 3;
+        bool ok = 3;
+        Value value = 4;
     }
 }
 

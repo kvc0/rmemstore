@@ -6,24 +6,28 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Rpc(_message.Message):
-    __slots__ = ("id", "put", "get")
+    __slots__ = ("id", "code", "put", "get")
     ID_FIELD_NUMBER: _ClassVar[int]
+    CODE_FIELD_NUMBER: _ClassVar[int]
     PUT_FIELD_NUMBER: _ClassVar[int]
     GET_FIELD_NUMBER: _ClassVar[int]
     id: int
+    code: int
     put: Put
     get: Get
-    def __init__(self, id: _Optional[int] = ..., put: _Optional[_Union[Put, _Mapping]] = ..., get: _Optional[_Union[Get, _Mapping]] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., code: _Optional[int] = ..., put: _Optional[_Union[Put, _Mapping]] = ..., get: _Optional[_Union[Get, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
-    __slots__ = ("id", "ok", "value")
+    __slots__ = ("id", "code", "ok", "value")
     ID_FIELD_NUMBER: _ClassVar[int]
+    CODE_FIELD_NUMBER: _ClassVar[int]
     OK_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     id: int
+    code: int
     ok: bool
     value: Value
-    def __init__(self, id: _Optional[int] = ..., ok: bool = ..., value: _Optional[_Union[Value, _Mapping]] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., code: _Optional[int] = ..., ok: bool = ..., value: _Optional[_Union[Value, _Mapping]] = ...) -> None: ...
 
 class Value(_message.Message):
     __slots__ = ("blob", "string", "map")

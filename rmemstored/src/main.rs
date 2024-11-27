@@ -1,15 +1,16 @@
-use std::sync::atomic::AtomicUsize;
+use std::sync::{atomic::AtomicUsize, Arc};
 
 use clap::Parser;
 use rmemstore_server::RMemstoreServer;
 
 mod commands;
-mod connection;
-mod connector;
+mod connection_service;
 mod options;
 mod rmemstore_server;
+mod socket_service;
 mod types;
 
+use socket_service::RMemstoreSocketService;
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
 
@@ -46,17 +47,16 @@ fn main() {
         .build()
         .expect("must be able to build worker runtime");
 
-    let server = RMemstoreServer::new(segments, options.cache_bytes);
+    let server = Arc::new(RMemstoreServer::new(segments, options.cache_bytes));
 
     let signals = signals::Signals::register().expect("must be able to register signals");
 
     match options.run_mode {
         options::ServerMode::Plaintext { socket_address } => {
             let mut server = connection_runtime
-                .block_on(protosocket_server::ProtosocketServer::new(
+                .block_on(protosocket_rpc::server::SocketRpcServer::new(
                     socket_address,
-                    connection_runtime.handle().clone(),
-                    connector::RMemstoreConnector::new(server),
+                    RMemstoreSocketService::new(server),
                 ))
                 .expect("can create a server");
             server.set_max_buffer_length(options.request_buffer_bytes);

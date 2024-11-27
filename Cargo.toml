@@ -43,16 +43,16 @@ bytes                           = { version = "1.6", features = ["serde"] }
 criterion                       = { version = "0.5", features = ["html_reports"] }
 clap                            = { version = "4", features = ["derive", "env"] }
 env_logger                      = { version = "0.11" }
+futures                         = { version = "0.3" }
 histogram                       = { version = "0.11" }
 k-lock                          = { version = "0.2" }
 log                             = { version = "0.4" }
-mio                             = { version = "1.0" }
 moka                            = { version = "0.12" }
 num_cpus                        = { version = "1.16" }
 parse-size                      = { version = "1" }
-protosocket                     = { version = "0.6" }
-protosocket-prost               = { version = "0.6" }
-protosocket-server              = { version = "0.6" }
+protosocket                     = { version = "0.7" }
+protosocket-prost               = { version = "0.7" }
+protosocket-rpc                 = { version = "0.7" }
 prost                           = { version = "0.13" }
 prost-build                     = { version = "0.13" }
 rand                            = { version = "0.8" }

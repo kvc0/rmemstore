@@ -5,7 +5,9 @@
 pub struct Rpc {
     #[prost(uint64, tag = "1")]
     pub id: u64,
-    #[prost(oneof = "rpc::Command", tags = "2, 3")]
+    #[prost(uint32, tag = "2")]
+    pub code: u32,
+    #[prost(oneof = "rpc::Command", tags = "3, 4")]
     pub command: ::core::option::Option<rpc::Command>,
 }
 /// Nested message and enum types in `Rpc`.
@@ -14,10 +16,10 @@ pub mod rpc {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Command {
         /// Response kind: ok
-        #[prost(message, tag = "2")]
+        #[prost(message, tag = "3")]
         Put(super::Put),
         /// Response kind: Value
-        #[prost(message, tag = "3")]
+        #[prost(message, tag = "4")]
         Get(super::Get),
     }
 }
@@ -26,7 +28,9 @@ pub mod rpc {
 pub struct Response {
     #[prost(uint64, tag = "1")]
     pub id: u64,
-    #[prost(oneof = "response::Kind", tags = "2, 3")]
+    #[prost(uint32, tag = "2")]
+    pub code: u32,
+    #[prost(oneof = "response::Kind", tags = "3, 4")]
     pub kind: ::core::option::Option<response::Kind>,
 }
 /// Nested message and enum types in `Response`.
@@ -34,9 +38,9 @@ pub mod response {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Kind {
-        #[prost(bool, tag = "2")]
+        #[prost(bool, tag = "3")]
         Ok(bool),
-        #[prost(message, tag = "3")]
+        #[prost(message, tag = "4")]
         Value(super::Value),
     }
 }

@@ -16,6 +16,7 @@ bench = false
 [dependencies]
 bytes                           = { workspace = true }
 prost                           = { workspace = true }
+protosocket-rpc                 = { workspace = true }
 
 [build-dependencies]
 prost-build                     = { workspace = true }

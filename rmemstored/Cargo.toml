@@ -13,15 +13,14 @@ ahash                           = { workspace = true }
 bytes                           = { workspace = true }
 clap                            = { workspace = true }
 env_logger                      = { workspace = true }
+futures                         = { workspace = true }
 k-lock                          = { workspace = true }
 log                             = { workspace = true }
-mio                             = { workspace = true, features = ["os-poll", "net"] }
-moka                            = { workspace = true, features = ["sync"] }
 num_cpus                        = { workspace = true }
 parse-size                      = { workspace = true }
 protosocket                     = { workspace = true }
 protosocket-prost               = { workspace = true }
-protosocket-server              = { workspace = true }
+protosocket-rpc                 = { workspace = true }
 rand                            = { workspace = true }
 thiserror                       = { workspace = true }
 tokio                           = { workspace = true, features = ["full"] }

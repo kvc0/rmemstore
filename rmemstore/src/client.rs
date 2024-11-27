@@ -1,70 +1,85 @@
-use protosocket_prost::ClientRegistry;
-use tokio::sync::mpsc;
+use std::{
+    net::SocketAddr,
+    sync::{atomic::AtomicU64, Arc},
+};
+
+use protosocket_prost::ProstSerializer;
+use protosocket_rpc::{client::Configuration, ProtosocketControlCode};
+use rmemstore_messages::{response, Response, Rpc};
 
 use crate::{
-    message_reactor::{RMemstoreMessageReactor, RpcRegistrar},
     types::{IntoKey, IntoValue, MemstoreValue},
     Error,
 };
 
-pub struct ClientConfiguration {
-    registry: ClientRegistry,
-}
-
-impl ClientConfiguration {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        let registry = protosocket_prost::ClientRegistry::new(tokio::runtime::Handle::current());
-        Self { registry }
-    }
-
-    pub async fn connect(
-        &mut self,
-        socket_address: impl Into<String>,
-    ) -> Result<Client, crate::Error> {
-        let (registrar, reactor) = RMemstoreMessageReactor::new();
-        let outbound = self
-            .registry
-            .register_client::<rmemstore_messages::Rpc, rmemstore_messages::Response, RMemstoreMessageReactor>(
-                socket_address,
-                reactor,
-            )
-            .await?;
-
-        Ok(Client::new(registrar, outbound))
-    }
-}
-
 /// Cheap to clone, this is how you call rmemstored.
 #[derive(Debug, Clone)]
 pub struct Client {
-    registrar: RpcRegistrar,
-    outbound: mpsc::Sender<rmemstore_messages::Rpc>,
+    client: protosocket_rpc::client::RpcClient<Rpc, Response>,
+    command_id: Arc<AtomicU64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConnectionConfiguration {
+    max_message_size: usize,
+    queued_messages: usize,
+}
+
+impl Default for ConnectionConfiguration {
+    fn default() -> Self {
+        Self {
+            max_message_size: 4 * (2 << 20),
+            queued_messages: 256,
+        }
+    }
+}
+
+impl ConnectionConfiguration {
+    pub fn max_message_size(&mut self, max_message_size: usize) {
+        self.max_message_size = max_message_size;
+    }
+
+    pub fn queued_messages(&mut self, queued_messages: usize) {
+        self.queued_messages = queued_messages;
+    }
 }
 
 impl Client {
-    pub fn new(registrar: RpcRegistrar, outbound: mpsc::Sender<rmemstore_messages::Rpc>) -> Self {
-        Self {
-            registrar,
-            outbound,
-        }
+    pub async fn connect(
+        address: SocketAddr,
+        configuration: ConnectionConfiguration,
+    ) -> Result<Self, crate::Error> {
+        let mut client_configuration = Configuration::default();
+        client_configuration.max_buffer_length(configuration.max_message_size);
+        client_configuration.max_queued_outbound_messages(configuration.queued_messages);
+        let (client, connection_driver) = protosocket_rpc::client::connect::<
+            ProstSerializer<Response, Rpc>,
+            ProstSerializer<Response, Rpc>,
+        >(address, &client_configuration)
+        .await?;
+        tokio::spawn(connection_driver);
+        Ok(Self {
+            client,
+            command_id: Arc::new(AtomicU64::new(1)),
+        })
     }
 
     async fn send_command(
         &self,
         command: rmemstore_messages::rpc::Command,
     ) -> Result<rmemstore_messages::Response, crate::Error> {
-        let (id, completion) = self.registrar.preregister_command();
-        self.outbound
-            .send(rmemstore_messages::Rpc {
+        let id = self
+            .command_id
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        Ok(self
+            .client
+            .send_unary(rmemstore_messages::Rpc {
                 id,
+                code: ProtosocketControlCode::Normal.as_u8() as u32,
                 command: Some(command),
             })
-            .await
-            .map_err(|_| crate::Error::ConnectionBroken("can't send to outbound stream"))?;
-        completion.await.map_err(|_| {
-            crate::Error::ConnectionBroken("can't receive response - sender was dropped")
-        })
+            .await?
+            .await?)
     }
 
     pub async fn put(&self, key: impl IntoKey, value: impl IntoValue) -> Result<(), crate::Error> {
@@ -78,17 +93,18 @@ impl Client {
         Ok(())
     }
 
-    pub async fn get(&self, key: impl IntoKey) -> Result<MemstoreValue, crate::Error> {
+    pub async fn get(&self, key: impl IntoKey) -> Result<Option<MemstoreValue>, crate::Error> {
         let command = rmemstore_messages::rpc::Command::Get(rmemstore_messages::Get {
             key: key.into_key(),
         });
         let response = self.send_command(command).await?;
-        let Some(response) = response.kind else {
-            return Err(Error::MalformedResponse("missing response kind"));
-        };
-        match response {
-            rmemstore_messages::response::Kind::Value(value) => value.try_into(),
-            _ => Err(Error::MalformedResponse("incorrect response type")),
+        match response.kind {
+            Some(response::Kind::Value(value)) => Ok(Some(value.try_into()?)),
+            Some(other) => {
+                log::debug!("unexpected response: {other:?}");
+                Err(Error::MalformedResponse("incorrect response type"))
+            }
+            _ => Ok(None),
         }
     }
 }
