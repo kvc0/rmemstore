@@ -1,8 +1,6 @@
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod rmemstore {
-    include!(concat!(env!("OUT_DIR"), "/rmemstore.rs"));
-}
+mod rmemstore;
 
 pub mod protosocket_adapter;
 
