@@ -1,6 +1,9 @@
 #[rustfmt::skip]
-#[allow(clippy::unwrap_used)]
-mod rmemstore;
+#[allow(clippy::all)]
+mod rmemstore {
+    include!(concat!(env!("OUT_DIR"), "/rmemstore.rs"));
+}
+
 pub mod protosocket_adapter;
 
 // While I don't normally condone wildcard imports, this is a generated file in a

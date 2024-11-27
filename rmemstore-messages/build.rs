@@ -9,7 +9,6 @@ fn main() {
         ".rmemstore.Put.key",
         ".rmemstore.Get.key",
     ]);
-    config.out_dir("./src");
 
     if std::env::var("CI").is_ok() {
         eprintln!("skipping python output");
