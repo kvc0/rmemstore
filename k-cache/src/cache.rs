@@ -83,29 +83,33 @@ where
     }
 
     pub fn put(&mut self, key: K, value: V) {
-        let new_weight = self.make_room_for(&key, &value);
-        self.weight += new_weight;
-        let visited = Arc::new(AtomicBool::new(true));
-        if let Some(replaced) = self.map.insert(
-            key.clone(),
-            SieveEntry {
-                data: value,
-                visited: visited.clone(),
-            },
-        ) {
-            let replaced_weight = W::weigh(&key, &replaced.data);
-            match self.weight.checked_sub(replaced_weight) {
-                Some(new_weight) => self.weight = new_weight,
-                None => {
-                    log::error!("weight underflow");
-                    self.weight = 0;
-                }
+        let new_entry_weight = self.make_room_for(&key, &value);
+        self.weight += new_entry_weight;
+
+        match self.map.entry(key.clone()) {
+            std::collections::hash_map::Entry::Occupied(mut occupied_entry) => {
+                let replaced_weight = W::weigh(&key, &occupied_entry.get().data);
+                self.weight -= replaced_weight; // already added the new entry weight
+
+                occupied_entry.get_mut().data = value;
+                occupied_entry
+                    .get_mut()
+                    .visited
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            std::collections::hash_map::Entry::Vacant(vacant_entry) => {
+                // it's still possible to get spurious evictions in here. I should replace the dirty atomicbool
+                // with a tri-state int to track deletion separately from visitation. That could also allow some
+                // stupid bitwise tricks to remember insertions and possibly eagerly sieve out unpopular, though
+                // technically accessed, entries.
+                let visited = Arc::new(AtomicBool::new(true));
+                vacant_entry.insert(SieveEntry {
+                    data: value,
+                    visited: visited.clone(),
+                });
+                self.sieve_pool.push_back(SieveEntry { data: key, visited });
             }
         }
-        self.sieve_pool.push_back(SieveEntry {
-            data: key.clone(),
-            visited,
-        });
     }
 
     pub fn get<Q>(&self, key: &Q) -> Option<&V>
@@ -127,6 +131,10 @@ where
     pub fn remove(&mut self, key: &K) -> Option<V> {
         match self.map.remove(key) {
             Some(removed) => {
+                // Note that this under-counts memory by accounting for the key size
+                // up front. The key is still in the sieve list. Hopefully it will be
+                // reclaimed soon. I could split the key and value weighers to do a
+                // better accounting job.
                 let removed_weight = W::weigh(key, &removed.data);
                 match self.weight.checked_sub(removed_weight) {
                     Some(new_weight) => self.weight = new_weight,
@@ -138,7 +146,6 @@ where
                 Some(removed.data)
             }
             None => {
-                // This can happen when the entry was already removed
                 log::debug!("garbage collecting sieve entry as {}", self.sieve_hand);
                 None
             }
@@ -163,6 +170,11 @@ where
                 if let Some(removed_value) = removed {
                     self.lifecycle
                         .on_eviction(sieve_key_entry.data, removed_value);
+                } else {
+                    // This can happen when the entry was already removed. It's not an eviction,
+                    // but a clean up of the sieve list. The value was already released - we can
+                    // simply drop the key.
+                    log::debug!("garbage collecting sieve entry at {}", self.sieve_hand);
                 }
 
                 if self.sieve_hand == self.sieve_pool.len() {
@@ -171,5 +183,24 @@ where
             }
         }
         entry_weight
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::hash::RandomState;
+
+    use super::*;
+
+    #[test]
+    fn test_put() {
+        let mut cache: Cache<String, String, RandomState> = Cache::new(RandomState::new(), 100);
+        cache.put("key1".to_string(), "value1".to_string());
+        assert_eq!(cache.get("key1"), Some(&"value1".to_string()));
+        cache.put("key1".to_string(), "value2".to_string());
+        assert_eq!(cache.get("key1"), Some(&"value2".to_string()));
+        assert_eq!(cache.weight, 1);
+        assert_eq!(cache.map.len(), 1);
+        assert_eq!(cache.sieve_pool.len(), 1);
     }
 }

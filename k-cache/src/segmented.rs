@@ -1,24 +1,66 @@
 use std::{borrow::Borrow, hash::BuildHasher};
 
-use crate::{Cache, One, Weigher};
+use crate::{
+    cache::{DefaultLifecycle, Lifecycle},
+    Cache, One, Weigher,
+};
 
 #[derive(Debug)]
-pub struct SegmentedCache<K, V, S: BuildHasher = std::hash::RandomState, W: Weigher<K, V> = One> {
-    segments: Vec<k_lock::Mutex<Cache<K, V, S, W>>>,
+pub struct SegmentedCache<
+    K,
+    V,
+    S: BuildHasher = std::hash::RandomState,
+    W: Weigher<K, V> = One,
+    L: Lifecycle<K, V> = DefaultLifecycle,
+> {
+    segments: Vec<k_lock::Mutex<Cache<K, V, S, W, L>>>,
     hasher: S,
 }
 
-impl<K, V, S, W> SegmentedCache<K, V, S, W>
+impl<K, V, S, W, L> SegmentedCache<K, V, S, W, L>
 where
     K: Eq + std::hash::Hash + Clone,
     V: Clone,
     S: BuildHasher + Default,
     W: Weigher<K, V> + Clone,
+    L: Lifecycle<K, V> + Default,
 {
     pub fn new(segments: usize, max_weight: usize) -> Self {
         let weight_per_segment = max_weight / segments;
         let segments = (0..segments)
-            .map(|_| k_lock::Mutex::new(Cache::new(S::default(), weight_per_segment)))
+            .map(|_| {
+                k_lock::Mutex::new(Cache::new_with_lifecycle(
+                    S::default(),
+                    weight_per_segment,
+                    L::default(),
+                ))
+            })
+            .collect();
+        Self {
+            segments,
+            hasher: S::default(),
+        }
+    }
+}
+
+impl<K, V, S, W, L> SegmentedCache<K, V, S, W, L>
+where
+    K: Eq + std::hash::Hash + Clone,
+    V: Clone,
+    S: BuildHasher + Default,
+    W: Weigher<K, V> + Clone,
+    L: Lifecycle<K, V> + Clone,
+{
+    pub fn new_with_lifecycle(segments: usize, max_weight: usize, lifecycle: L) -> Self {
+        let weight_per_segment = max_weight / segments;
+        let segments = (0..segments)
+            .map(|_| {
+                k_lock::Mutex::new(Cache::new_with_lifecycle(
+                    S::default(),
+                    weight_per_segment,
+                    lifecycle.clone(),
+                ))
+            })
             .collect();
         Self {
             segments,
@@ -32,6 +74,14 @@ where
             .lock()
             .expect("mutex must not be poisoned")
             .put(key, value)
+    }
+
+    pub fn remove(&self, key: &K) -> Option<V> {
+        let slot = self.hasher.hash_one(key) as usize % self.segments.len();
+        self.segments[slot]
+            .lock()
+            .expect("mutex must not be poisoned")
+            .remove(key)
     }
 
     pub fn get<Q>(&self, key: &Q) -> Option<V>
