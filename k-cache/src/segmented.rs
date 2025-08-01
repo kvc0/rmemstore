@@ -2,6 +2,7 @@ use std::{borrow::Borrow, hash::BuildHasher};
 
 use crate::{Cache, One, Weigher};
 
+#[derive(Debug)]
 pub struct SegmentedCache<K, V, S: BuildHasher = std::hash::RandomState, W: Weigher<K, V> = One> {
     segments: Vec<k_lock::Mutex<Cache<K, V, S, W>>>,
     hasher: S,

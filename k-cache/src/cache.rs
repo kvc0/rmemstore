@@ -18,11 +18,13 @@ pub trait Weigher<K, V> {
 pub struct One;
 impl<K, V> Weigher<K, V> for One {}
 
+#[derive(Debug)]
 struct SieveEntry<D> {
     data: D,
     visited: Arc<AtomicBool>,
 }
 
+#[derive(Debug)]
 pub struct Cache<K, V, S, W: Weigher<K, V> = One> {
     map: HashMap<K, SieveEntry<V>, S>,
     sieve_pool: VecDeque<SieveEntry<K>>,
