@@ -22,7 +22,7 @@ codegen-units = 1
 lto = "fat"
 
 [workspace.package]
-version = "0.1.5"
+version = "0.1.6"
 authors = ["kvc0"]
 repository = "https://github.com/kvc0/rmemstore"
 edition = "2021"
