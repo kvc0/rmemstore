@@ -18,6 +18,14 @@ pub trait Weigher<K, V> {
 pub struct One;
 impl<K, V> Weigher<K, V> for One {}
 
+pub trait Lifecycle<K, V> {
+    fn on_eviction(&self, _key: K, _value: V) {}
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct DefaultLifecycle;
+impl<K, V> Lifecycle<K, V> for DefaultLifecycle {}
+
 #[derive(Debug)]
 struct SieveEntry<D> {
     data: D,
@@ -25,20 +33,22 @@ struct SieveEntry<D> {
 }
 
 #[derive(Debug)]
-pub struct Cache<K, V, S, W: Weigher<K, V> = One> {
+pub struct Cache<K, V, S, W: Weigher<K, V> = One, L: Lifecycle<K, V> = DefaultLifecycle> {
     map: HashMap<K, SieveEntry<V>, S>,
     sieve_pool: VecDeque<SieveEntry<K>>,
     sieve_hand: usize,
     max_weight: usize,
     weight: usize,
+    lifecycle: L,
     _phantom: PhantomData<W>,
 }
 
-impl<K, V, S, W> Cache<K, V, S, W>
+impl<K, V, S, W, L> Cache<K, V, S, W, L>
 where
     K: Eq + Hash + Clone,
     S: BuildHasher,
     W: Weigher<K, V>,
+    L: Lifecycle<K, V> + Default,
 {
     pub fn new(hasher: S, max_weight: usize) -> Self {
         Self {
@@ -47,6 +57,27 @@ where
             sieve_hand: 0,
             max_weight,
             weight: 0,
+            lifecycle: Default::default(),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<K, V, S, W, L> Cache<K, V, S, W, L>
+where
+    K: Eq + Hash + Clone,
+    S: BuildHasher,
+    W: Weigher<K, V>,
+    L: Lifecycle<K, V>,
+{
+    pub fn new_with_lifecycle(hasher: S, max_weight: usize, lifecycle: L) -> Self {
+        Self {
+            map: HashMap::with_hasher(hasher),
+            sieve_pool: VecDeque::new(),
+            sieve_hand: 0,
+            max_weight,
+            weight: 0,
+            lifecycle,
             _phantom: PhantomData,
         }
     }
@@ -93,6 +124,27 @@ where
         }
     }
 
+    pub fn remove(&mut self, key: &K) -> Option<V> {
+        match self.map.remove(key) {
+            Some(removed) => {
+                let removed_weight = W::weigh(key, &removed.data);
+                match self.weight.checked_sub(removed_weight) {
+                    Some(new_weight) => self.weight = new_weight,
+                    None => {
+                        log::error!("weight underflow");
+                        self.weight = 0;
+                    }
+                };
+                Some(removed.data)
+            }
+            None => {
+                // This can happen when the entry was already removed
+                log::debug!("garbage collecting sieve entry as {}", self.sieve_hand);
+                None
+            }
+        }
+    }
+
     fn make_room_for(&mut self, key: &K, value: &V) -> usize {
         let entry_weight = W::weigh(key, value);
         while self.max_weight < self.weight + entry_weight {
@@ -107,20 +159,10 @@ where
                     .sieve_pool
                     .swap_remove_back(self.sieve_hand)
                     .expect("the index must be present");
-                match self.map.remove(&sieve_key_entry.data) {
-                    Some(removed) => {
-                        let removed_weight = W::weigh(&sieve_key_entry.data, &removed.data);
-                        match self.weight.checked_sub(removed_weight) {
-                            Some(new_weight) => self.weight = new_weight,
-                            None => {
-                                log::error!("weight underflow");
-                                self.weight = 0;
-                            }
-                        }
-                    }
-                    None => {
-                        log::debug!("garbage collecting sieve entry as {}", self.sieve_hand);
-                    }
+                let removed = self.remove(&sieve_key_entry.data);
+                if let Some(removed_value) = removed {
+                    self.lifecycle
+                        .on_eviction(sieve_key_entry.data, removed_value);
                 }
 
                 if self.sieve_hand == self.sieve_pool.len() {
