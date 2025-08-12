@@ -152,6 +152,19 @@ where
         }
     }
 
+    /// Clears the cache, via eviction.
+    ///
+    /// If you want to handle the evicted entries, use the Lifecycle trait.
+    /// The order of eviction is unspecified.
+    pub fn evict_all(&mut self) {
+        for (k, v) in self.map.drain() {
+            self.lifecycle.on_eviction(k, v.data);
+        }
+        self.sieve_pool.clear();
+        self.sieve_hand = 0;
+        self.weight = 0;
+    }
+
     fn make_room_for(&mut self, key: &K, value: &V) -> usize {
         let entry_weight = W::weigh(key, value);
         while self.max_weight < self.weight + entry_weight {

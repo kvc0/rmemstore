@@ -96,4 +96,26 @@ where
             .get(key)
             .cloned()
     }
+    /// Clears the cache, via eviction.
+    ///
+    /// If you want to handle the evicted entries, use the Lifecycle trait.
+    /// The order of eviction is unspecified.
+    ///
+    /// This function does not guarantee that the cache is empty after calling it
+    /// in the presence of concurrent writes. If you want to empty the cache,
+    /// you need to stop writes first, and then call this function.
+    /// If you just want to reset the cache, then you can call this function with
+    /// concurrent writes. It's safe, it's just not going to be empty.
+    ///
+    /// It will block `1/segments` of the cache at a time for segment size time, so
+    /// it's potentially fairly intrusive with large segments, especially with an
+    /// expensive on_eviction Lifecycle if you have one.
+    pub fn evict_all(&self) {
+        for segment in &self.segments {
+            segment
+                .lock()
+                .expect("mutex must not be poisoned")
+                .evict_all();
+        }
+    }
 }
