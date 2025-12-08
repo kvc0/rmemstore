@@ -1,8 +1,7 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use futures::{future::BoxFuture, stream::BoxStream, FutureExt};
 use protosocket_rpc::{
-    server::{ConnectionService, RpcKind},
+    server::{ConnectionService, RpcResponder},
     ProtosocketControlCode,
 };
 use rmemstore_messages::Response;
@@ -23,53 +22,38 @@ impl RMemstoreConnectionService {
 impl ConnectionService for RMemstoreConnectionService {
     type Request = rmemstore_messages::Rpc;
     type Response = rmemstore_messages::Response;
-    type UnaryFutureType = BoxFuture<'static, Self::Response>;
-    type StreamType = BoxStream<'static, Self::Response>;
 
     fn new_rpc(
         &mut self,
         initiating_message: Self::Request,
-    ) -> protosocket_rpc::server::RpcKind<Self::UnaryFutureType, Self::StreamType> {
+        responder: RpcResponder<'_, Self::Response>,
+    ) {
         log::debug!("{} received message: {initiating_message:?}", self.address);
         let id = initiating_message.id;
         match initiating_message.command {
-            Some(command) => {
-                let server = self.server.clone();
-                match command {
-                    rmemstore_messages::rpc::Command::Put(put) => RpcKind::Unary(
-                        async move {
-                            Response {
-                                id,
-                                code: ProtosocketControlCode::Normal.as_u8() as u32,
-                                kind: put.run(&server),
-                            }
-                        }
-                        .boxed(),
-                    ),
-                    rmemstore_messages::rpc::Command::Get(get) => RpcKind::Unary(
-                        async move {
-                            Response {
-                                id,
-                                code: ProtosocketControlCode::Normal.as_u8() as u32,
-                                kind: get.run(&server),
-                            }
-                        }
-                        .boxed(),
-                    ),
+            Some(command) => match command {
+                rmemstore_messages::rpc::Command::Put(put) => {
+                    responder.immediate(Response {
+                        id,
+                        code: ProtosocketControlCode::Normal.as_u8() as u32,
+                        kind: put.run(&self.server),
+                    });
                 }
-            }
+                rmemstore_messages::rpc::Command::Get(get) => {
+                    responder.immediate(Response {
+                        id,
+                        code: ProtosocketControlCode::Normal.as_u8() as u32,
+                        kind: get.run(&self.server),
+                    });
+                }
+            },
             None => {
                 log::error!("bad command: {initiating_message:?}");
-                RpcKind::Unary(
-                    async move {
-                        Response {
-                            id,
-                            code: ProtosocketControlCode::Cancel.as_u8() as u32,
-                            kind: None,
-                        }
-                    }
-                    .boxed(),
-                )
+                responder.immediate(Response {
+                    id,
+                    code: ProtosocketControlCode::Cancel.as_u8() as u32,
+                    kind: None,
+                });
             }
         }
     }

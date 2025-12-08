@@ -8,8 +8,8 @@ use rmemstore::ConnectionConfiguration;
 use tokio::task::JoinSet;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let threads = 4;
-    let connections = 4;
+    let threads = 12;
+    let connections = 12;
     let concurrency_per_connection = 64;
 
     let runtime = tokio::runtime::Builder::new_multi_thread()

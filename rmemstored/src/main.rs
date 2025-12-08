@@ -1,6 +1,8 @@
-use std::sync::{atomic::AtomicUsize, Arc};
+use std::sync::Arc;
 
 use clap::Parser;
+use protosocket::TcpSocketListener;
+use protosocket_rpc::server::LevelSpawn;
 use rmemstore_server::RMemstoreServer;
 
 mod commands;
@@ -13,6 +15,7 @@ mod types;
 use socket_service::RMemstoreSocketService;
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
+use tokio::task::spawn_blocking;
 
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]
@@ -35,17 +38,12 @@ fn main() {
     };
     let segments = (worker_threads as f64 * 1.5).ceil() as usize;
 
-    let connection_runtime = tokio::runtime::Builder::new_multi_thread()
+    let runtime = level_runtime::Builder::default()
+        .worker_threads(options.worker_threads)
         .enable_all()
+        .thread_name_prefix("conn")
         .event_interval(3)
-        .worker_threads(worker_threads)
-        .thread_name_fn(|| {
-            static ATOMIC_ID: AtomicUsize = AtomicUsize::new(0);
-            let id = ATOMIC_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            format!("conn-{}", id)
-        })
-        .build()
-        .expect("must be able to build worker runtime");
+        .build();
 
     let server = Arc::new(RMemstoreServer::new(segments, options.cache_bytes));
 
@@ -53,25 +51,39 @@ fn main() {
 
     match options.run_mode {
         options::ServerMode::Plaintext { socket_address } => {
-            let mut server = connection_runtime
-                .block_on(protosocket_rpc::server::SocketRpcServer::new(
-                    socket_address,
-                    RMemstoreSocketService::new(server),
-                ))
-                .expect("can create a server");
-            server.set_max_buffer_length(options.request_buffer_bytes);
-            log::info!("serving on {socket_address}");
-            let join_handle = connection_runtime.spawn(server);
-            connection_runtime.block_on(async move {
-                tokio::select! {
-                    _ = signals.wait_for_termination() => {
-                        log::warn!("terminal signal");
-                    }
-                    _ = join_handle => {
-                        log::warn!("server exited");
-                    }
+            runtime.handle().spawn_on_each(move || {
+                let server = server.clone();
+                async move {
+                    let mut server = protosocket_rpc::server::SocketRpcServer::new_with_spawner(
+                        TcpSocketListener::listen(socket_address, 4, None)?,
+                        RMemstoreSocketService::new(server.clone()),
+                        4 << 20,
+                        1 << 20,
+                        128,
+                        LevelSpawn::default(),
+                    )
+                    .await
+                    .expect("must be able to listen");
+                    server.set_max_queued_outbound_messages(512);
+                    server.set_max_buffer_length(options.request_buffer_bytes);
+                    server.await
                 }
-            })
+            });
+
+            log::info!("serving on {socket_address}");
+            tokio::runtime::Builder::new_current_thread()
+                .build()
+                .expect("runtime")
+                .block_on(async move {
+                    let join_handle = Arc::new(spawn_blocking(move || runtime.run()));
+
+                    tokio::select! {
+                        _ = signals.wait_for_termination() => {
+                            log::warn!("terminal signal");
+                        }
+                        // fixme: need to make levelruntime stoppable
+                    }
+                })
         }
     }
 }

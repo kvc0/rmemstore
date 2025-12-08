@@ -58,8 +58,5 @@ pub enum ServerMode {
 fn parse_address(arg: &str) -> io::Result<SocketAddr> {
     std::net::ToSocketAddrs::to_socket_addrs(arg)?
         .next()
-        .ok_or(io::Error::new(
-            io::ErrorKind::Other,
-            "must pass a valid socket address",
-        ))
+        .ok_or(io::Error::other("must pass a valid socket address"))
 }

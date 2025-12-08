@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use protosocket_prost::ProstSerializer;
+use protosocket::{PooledEncoder, StreamWithAddress, TcpSocketListener};
+use protosocket_prost::{ProstDecoder, ProstSerializer};
 use protosocket_rpc::server::SocketService;
 use rmemstore_messages::{Response, Rpc};
 
@@ -17,20 +18,19 @@ impl RMemstoreSocketService {
 }
 
 impl SocketService for RMemstoreSocketService {
-    type RequestDeserializer = ProstSerializer<Rpc, Response>;
-    type ResponseSerializer = ProstSerializer<Rpc, Response>;
+    type Codec = (PooledEncoder<ProstSerializer<Response>>, ProstDecoder<Rpc>);
     type ConnectionService = RMemstoreConnectionService;
+    type SocketListener = TcpSocketListener;
 
-    fn deserializer(&self) -> Self::RequestDeserializer {
-        ProstSerializer::default()
+    fn codec(&self) -> Self::Codec {
+        Default::default()
     }
 
-    fn serializer(&self) -> Self::ResponseSerializer {
-        ProstSerializer::default()
-    }
-
-    fn new_connection_service(&self, address: std::net::SocketAddr) -> Self::ConnectionService {
-        log::info!("new connection from: {address}");
-        RMemstoreConnectionService::new(address, self.server.clone())
+    fn new_stream_service(
+        &self,
+        stream: &StreamWithAddress<tokio::net::TcpStream>,
+    ) -> Self::ConnectionService {
+        log::info!("new connection from: {}", stream.address());
+        RMemstoreConnectionService::new(stream.address(), self.server.clone())
     }
 }

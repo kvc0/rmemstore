@@ -1,7 +1,7 @@
 use std::hash::Hash;
 use std::marker::PhantomData;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::{
     borrow::Borrow,
     collections::{HashMap, VecDeque},

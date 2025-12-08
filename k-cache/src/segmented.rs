@@ -1,8 +1,8 @@
 use std::{borrow::Borrow, hash::BuildHasher};
 
 use crate::{
-    cache::{DefaultLifecycle, Lifecycle},
     Cache, One, Weigher,
+    cache::{DefaultLifecycle, Lifecycle},
 };
 
 #[derive(Debug)]
@@ -13,6 +13,7 @@ pub struct SegmentedCache<
     W: Weigher<K, V> = One,
     L: Lifecycle<K, V> = DefaultLifecycle,
 > {
+    #[allow(clippy::type_complexity)]
     segments: Vec<k_lock::Mutex<Cache<K, V, S, W, L>>>,
     hasher: S,
 }

@@ -1,15 +1,19 @@
 use std::{
     net::SocketAddr,
-    sync::{atomic::AtomicU64, Arc},
+    sync::{Arc, atomic::AtomicU64},
 };
 
-use protosocket_prost::ProstSerializer;
-use protosocket_rpc::{client::Configuration, ProtosocketControlCode};
-use rmemstore_messages::{response, Response, Rpc};
+use protosocket::PooledEncoder;
+use protosocket_prost::{ProstDecoder, ProstSerializer};
+use protosocket_rpc::{
+    ProtosocketControlCode,
+    client::{Configuration, TcpStreamConnector},
+};
+use rmemstore_messages::{Response, Rpc, response};
 
 use crate::{
-    types::{IntoKey, IntoValue, MemstoreValue},
     Error,
+    types::{IntoKey, IntoValue, MemstoreValue},
 };
 
 /// Cheap to clone, this is how you call rmemstored.
@@ -49,12 +53,12 @@ impl Client {
         address: SocketAddr,
         configuration: ConnectionConfiguration,
     ) -> Result<Self, crate::Error> {
-        let mut client_configuration = Configuration::default();
+        let mut client_configuration = Configuration::new(TcpStreamConnector);
         client_configuration.max_buffer_length(configuration.max_message_size);
         client_configuration.max_queued_outbound_messages(configuration.queued_messages);
         let (client, connection_driver) = protosocket_rpc::client::connect::<
-            ProstSerializer<Response, Rpc>,
-            ProstSerializer<Response, Rpc>,
+            (PooledEncoder<ProstSerializer<Rpc>>, ProstDecoder<Response>),
+            _,
         >(address, &client_configuration)
         .await?;
         tokio::spawn(connection_driver);
@@ -77,8 +81,7 @@ impl Client {
                 id,
                 code: ProtosocketControlCode::Normal.as_u8() as u32,
                 command: Some(command),
-            })
-            .await?
+            })?
             .await?)
     }
 
