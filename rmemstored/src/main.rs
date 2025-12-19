@@ -15,7 +15,6 @@ mod types;
 use socket_service::RMemstoreSocketService;
 #[cfg(not(target_env = "msvc"))]
 use tikv_jemallocator::Jemalloc;
-use tokio::task::spawn_blocking;
 
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]
@@ -62,7 +61,6 @@ fn main() {
                         128,
                         LevelSpawn::default(),
                     )
-                    .await
                     .expect("must be able to listen");
                     server.set_max_queued_outbound_messages(512);
                     server.set_max_buffer_length(options.request_buffer_bytes);
@@ -71,19 +69,7 @@ fn main() {
             });
 
             log::info!("serving on {socket_address}");
-            tokio::runtime::Builder::new_current_thread()
-                .build()
-                .expect("runtime")
-                .block_on(async move {
-                    let join_handle = Arc::new(spawn_blocking(move || runtime.run()));
-
-                    tokio::select! {
-                        _ = signals.wait_for_termination() => {
-                            log::warn!("terminal signal");
-                        }
-                        // fixme: need to make levelruntime stoppable
-                    }
-                })
+            runtime.run_with_termination(signals.wait_for_termination());
         }
     }
 }

@@ -683,9 +683,11 @@ dependencies = [
 
 [[package]]
 name = "level-runtime"
-version = "0.12.0"
-source = "git+https://github.com/kvc0/protosocket.git?branch=abortion#4d9b7f08da52ca85f0c1649042615d5279d983a5"
+version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8c01db1f762d840a96fc5cfed714eddbc36621b052407d4981a1c0bd6d56c3d"
 dependencies = [
+ "futures",
  "log",
  "rand",
  "tokio",
@@ -982,8 +984,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.12.0"
-source = "git+https://github.com/kvc0/protosocket.git?branch=abortion#4d9b7f08da52ca85f0c1649042615d5279d983a5"
+version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4db5e3f319165f8eff2d0967e4b0208d0fbe2ef2d39ee5338049734f8e9cce34"
 dependencies = [
  "bytes",
  "futures",
@@ -998,8 +1001,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-prost"
-version = "0.12.0"
-source = "git+https://github.com/kvc0/protosocket.git?branch=abortion#4d9b7f08da52ca85f0c1649042615d5279d983a5"
+version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40351364185bf19ddce01b1663697e7c6fb004ba24fe0caea26685789e6327ab"
 dependencies = [
  "bytes",
  "log",
@@ -1012,8 +1016,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-rpc"
-version = "0.12.0"
-source = "git+https://github.com/kvc0/protosocket.git?branch=abortion#4d9b7f08da52ca85f0c1649042615d5279d983a5"
+version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ab7316ec3ccf018cdc10a0ba9dbaa93c062e8f8580c9adfc38d5956c0c9d7f"
 dependencies = [
  "ahash",
  "futures",
@@ -1413,8 +1418,9 @@ dependencies = [
 
 [[package]]
 name = "spillway"
-version = "0.12.0"
-source = "git+https://github.com/kvc0/protosocket.git?branch=abortion#4d9b7f08da52ca85f0c1649042615d5279d983a5"
+version = "1.0.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9200fe172b23941a98092cb0be10413f5c96d2e9bc69a79c556644654f24d6cf"
 dependencies = [
  "futures",
  "log",
