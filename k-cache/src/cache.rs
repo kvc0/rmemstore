@@ -18,8 +18,25 @@ pub trait Weigher<K, V> {
 pub struct One;
 impl<K, V> Weigher<K, V> for One {}
 
+/// Result of a [`Lifecycle::evaluate`] check on an existing entry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EntryStatus {
+    /// The entry should stay in the cache as long as there is room
+    Retain,
+    /// The entry is evictable
+    Evict,
+}
+
 pub trait Lifecycle<K, V> {
-    fn on_eviction(&self, _key: K, _value: V) {}
+    /// Called when an entry has been evicted from the cache. Receives ownership
+    /// of the key and value so they can be forwarded or dropped.
+    fn on_eviction(&mut self, _key: K, _value: V) {}
+
+    /// Inspect an existing entry and decide whether it should remain in the
+    /// cache. Called as the sieve hand passes over entries during [`Cache::put`].
+    fn evaluate(&self, _key: &K, _value: &V) -> EntryStatus {
+        EntryStatus::Retain
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -83,6 +100,9 @@ where
     }
 
     pub fn put(&mut self, key: K, value: V) {
+        // Advance the hand a few states so the sieve always progresses for Lifecycle.
+        self.walk_hand();
+
         let new_entry_weight = self.make_room_for(&key, &value);
         self.weight += new_entry_weight;
 
@@ -117,15 +137,16 @@ where
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        match self.map.get(key) {
-            Some(entry) => {
-                entry
-                    .visited
-                    .store(true, std::sync::atomic::Ordering::Relaxed);
-                Some(&entry.data)
-            }
-            None => None,
+        let (full_key, entry) = self.map.get_key_value(key)?;
+        // If the Lifecycle says this entry is stale, report a miss. The hand
+        // will clean it up the next time it passes over this position.
+        if self.lifecycle.evaluate(full_key, &entry.data) == EntryStatus::Evict {
+            return None;
         }
+        entry
+            .visited
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        Some(&entry.data)
     }
 
     pub fn remove(&mut self, key: &K) -> Option<V> {
@@ -165,6 +186,48 @@ where
         self.weight = 0;
     }
 
+    /// Advance the sieve hand a small amount, [`Lifecycle::evaluate`]ing each.
+    /// Entries whose evaluation returns [`EntryStatus::Evict`] are drained into
+    /// `on_eviction` per usual.
+    fn walk_hand(&mut self) {
+        for _ in 0..3 {
+            if self.sieve_pool.is_empty() {
+                return;
+            }
+            let status = {
+                let key = &self.sieve_pool[self.sieve_hand].data;
+                match self.map.get(key) {
+                    Some(entry) => self.lifecycle.evaluate(key, &entry.data),
+                    None => EntryStatus::Evict,
+                }
+            };
+            match status {
+                EntryStatus::Evict => {
+                    let sieve_key_entry = self
+                        .sieve_pool
+                        .swap_remove_back(self.sieve_hand)
+                        .expect("the index must be present");
+                    if let Some(removed_value) = self.remove(&sieve_key_entry.data) {
+                        self.lifecycle
+                            .on_eviction(sieve_key_entry.data, removed_value);
+                    } else {
+                        log::debug!("garbage collecting sieve entry at {}", self.sieve_hand);
+                    }
+                    if self.sieve_pool.is_empty() {
+                        self.sieve_hand = 0;
+                        return;
+                    }
+                    if self.sieve_hand >= self.sieve_pool.len() {
+                        self.sieve_hand = 0;
+                    }
+                }
+                EntryStatus::Retain => {
+                    self.sieve_hand = (self.sieve_hand + 1) % self.sieve_pool.len();
+                }
+            }
+        }
+    }
+
     fn make_room_for(&mut self, key: &K, value: &V) -> usize {
         let entry_weight = W::weigh(key, value);
         while self.max_weight < self.weight + entry_weight {
@@ -175,6 +238,8 @@ where
             if visited {
                 self.sieve_hand = (self.sieve_hand + 1) % self.sieve_pool.len();
             } else {
+                // I don't care if the policy says to keep this value, I need the space. So out
+                // of the cache it goes.
                 let sieve_key_entry = self
                     .sieve_pool
                     .swap_remove_back(self.sieve_hand)

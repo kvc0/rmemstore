@@ -13,6 +13,7 @@ pub struct SegmentedCache<
     W: Weigher<K, V> = One,
     L: Lifecycle<K, V> = DefaultLifecycle,
 > {
+    #[allow(clippy::type_complexity)]
     segments: Vec<k_lock::Mutex<Cache<K, V, S, W, L>>>,
     hasher: S,
 }
